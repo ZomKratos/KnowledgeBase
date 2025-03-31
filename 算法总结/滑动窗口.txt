@@ -1,0 +1,51 @@
+滑动窗口
+我认为的解题思路是声明一个left，然后遍历所有元素，检查当前元素是否能够加入，不能就从left开始循环退出元素直到right能够加入，总而言之right在本次循环中一定会被加入。
+
+经典例题：
+重复字符的最长子串：给定一个字符串 s ，请你找出其中不含有重复字符的 最长子串 的长度。
+代码：
+    public int LengthOfLongestSubstring(string s)
+    {
+        int maxLen = 0;
+        if (s == null || s.Length == 0) return maxLen;
+        int left = 0;
+        int len = s.Length;
+        HashSet<int> hashSet = new HashSet<int>();
+        for(int i = 0; i < len; i++)
+        {
+            while (hashSet.Contains(s[i]))
+            {
+                hashSet.Remove(s[left]);
+                left++;
+            }
+            hashSet.Add(s[i]);
+            if(hashSet.Count > maxLen)
+            {
+                maxLen = hashSet.Count;
+            }
+        }
+        return maxLen;
+    }
+思路：每次循环检测是否可以添加s[right]，可以的话直接添加，不可以就从left开始去掉重复的元素再添加。
+
+找到字符串中所有字母异位词：给定两个字符串 s 和 p，找到 s 中所有 p 的 异位词 的子串，返回这些子串的起始索引。异位词 指由相同字母重排列形成的字符串（包括相同的字符串）。例如输入: s = "cbaebabacd", p = "abc"输出: [0,6]
+代码：
+        while(right < s.Length - 1)
+        {
+            right++;
+            TryAdd(standardDic, s[right]);
+            standardDic[s[left]]--;
+            if (standardDic[s[left]] == 0)
+            {
+                standardDic.Remove(s[left]);
+            }
+            left++;
+            if (Enumerable.SequenceEqual(dic, standardDic))
+            {
+                result.Add(left);
+            }
+        }
+思路：这题的特点是滑动数组是固定长度的(即p.Length)，并且因为输入仅有小写字母，可以直接用int[] pCount = new int[26];来代替字典，插入和删除新值的时候会方便很多。dic和standardDic是SortedDictionary，这样才能被Enumerable.SequenceEqual比较，但是插入删除还是不方便。
+
+
+

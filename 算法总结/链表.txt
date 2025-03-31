@@ -1,0 +1,36 @@
+链表题关键要思路清晰，迅速的把要操作的几个节点找出来，然后进行操作。
+初始化假头dummyHead为一个不符合要求的节点(例如节点的值是-100~100则初始化为-101防止dummyHead被讨论)，将dummyHead的next节点指向Head节点，初始化cur节点指向dummyHead开始遍历，这样可以讨论当Head节点需要操作的情况。
+使用快慢指针可获取中间节点。
+增加或删除或修改某节点需要获取到该节点的前一个节点。
+想寻找第n个节点可以假设寻找第0个节点时，发现下列式子可以找到：
+	cur = dummyHead;
+	while(index >= 0)
+        {
+            cur = cur.next;
+            index--;
+        }
+想删除第n个节点可以假设寻找第0个节点的前一个节点，发现下列式子可以找到：
+	cur = dummyHead;
+	while(index > 0)
+        {
+            cur = cur.next;
+            index--;
+        }
+就可以轻松找到需要的式子了。
+
+易错的地方在于操作节点的顺序，例如倒序的操作应该是：
+	ListNode pre = before;
+        cur = first;
+        while(cur != after)
+        {
+            ListNode tmp = cur.next;
+            cur.next = pre;
+            pre = cur;
+            cur = tmp;
+        }
+顺序不能反，且其中不能用pre = pre.next，因为pre.next已经被改变了。
+经典题：
+删除倒数第k个节点
+给两个节点序号翻转中间的的节点顺序https://leetcode.cn/problems/reverse-linked-list-ii/solutions/634701/fan-zhuan-lian-biao-ii-by-leetcode-solut-teyq/
+用归并排序实现时间复杂度为nlogn的链表排序：https://leetcode.cn/problems/sort-list/?envType=study-plan-v2&envId=top-100-liked
+合并k个长度为n的链表，使用优先队列数据结构：https://leetcode.cn/problems/merge-k-sorted-lists/?envType=study-plan-v2&envId=top-100-liked

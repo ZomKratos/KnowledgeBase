@@ -1,0 +1,365 @@
+回溯算法：
+有递归才有回溯，将算法过程看做一个树形结构。
+是一种纯暴力算法，用于解决一切用for循环难以解决的问题。
+例如求范围 [1, n]中长度为2的组合，用两层for循环可以找出，但是求长度为50的时候，就要用50层for循环，当求长度为k的时候用for循环就没法写了，连要多少层循环都不知道。这时就只能用回溯算法解决。
+
+回溯算法固定公式：
+void backTracking(参数待定，可以需要的时候再加)
+{
+	if(终止条件)
+	{
+		收集结果;
+		return;
+	}
+	for(遍历集合元素)
+	{
+		添加节点影响；
+		进行递归；
+		删除节点影响；
+	}
+	return ;
+}
+
+回溯三要素：
+结束条件(结果分布在叶子节点中才有这个环节——例如组合、分割类问题；结果分布在节点中就没有——例如子集问题)
+开始遍历的位置
+节点的添加和删除
+
+回溯算法经典问题：
+组合问题
+字符串切割问题
+子集问题
+排列问题
+皇后问题
+
+1.组合：给定两个整数 n 和 k，返回范围 [1, n] 中所有可能的 k 个数的组合。
+思路：
+    private List<IList<int>> result;
+    private List<int> path;
+    private void BackTrack(int n, int k, int startIndex)
+    {
+        if(path.Count == k)
+        {
+            result.Add(new List<int>(path));
+            return;
+        }
+        for(int i = startIndex; i <= n; i++)
+        {
+            path.Add(i);
+            BackTrack(n, k, i + 1);
+            path.RemoveAt(path.Count - 1);
+        }
+    }
+
+2.电话号码字母组合：给定一个仅包含数字 2-9 的字符串，返回所有它能表示的字母组合。答案可以按 任意顺序 返回。给出数字到字母的映射如下2-abc，3-def，4-ghi，5-jkl，6-mno，7-pqrs，8-tuv，9-wxyz。
+思路：
+    private  char[][] arr = new char[][]
+    {
+        new char[] {},
+        new char[] { },
+        new char[]{ 'a','b','c'},
+        new char[]{'d','e','f' },
+        new char[]{'g','h','i' },
+        new char[]{'j','k','l' },
+        new char[]{'m','n','o' },
+        new char[]{'p','q','r','s' },
+        new char[]{'t','u','v'},
+        new char[]{'w','x','y','z'}
+    };
+    private  void BackTrack(string digits, int index)
+    {
+        if(index == digits.Length)
+        {
+            result.Add(path.ToString());
+            return;
+        }
+        foreach(char c in arr[digits[index] - 48])
+        {
+            path.Append(c);
+            BackTrack(digits, index + 1);
+            path.Length--;
+        }
+    }
+
+3.组合总和：给你一个 无重复元素 的整数数组 candidates 和一个目标整数 target ，找出 candidates 中可以使数字和为目标数 target 的 所有 不同组合。
+代码：
+    private void BackTrack(int[] candidates, int target, int startIndex, int sum)
+    {
+        if(sum >= target)
+        {
+            if(sum == target)
+            {
+                result.Add(new List<int>(path));
+            }
+            return;
+        }
+        for(int i = startIndex; i < candidates.Length; i++)
+        {
+            path.Add(candidates[i]);
+            BackTrack(candidates, target, i, sum + candidates[i]);
+            path.RemoveAt(path.Count - 1);
+        }
+    }
+
+4.组合总和2(!)：给定一个候选人编号的集合 candidates (可能有重复)和一个目标数 target ，找出 candidates 中所有可以使数字和为 target 的组合。
+注意：组合是不能重复的。
+代码：
+	main(){
+		...
+        	Array.Sort(candidates);
+		...
+	}
+	backtrack(){
+		...
+        	for(int i = startIndex; i < candidates.Length; i++)
+        	{
+            		if (i >= 1 && used[i - 1] == false && candidates[i] == candidates[i - 1])
+            		{
+                		continue;
+            		}
+            		used[i] = true;
+          		path.Add(candidates[i]);
+           		BackTrack(candidates, target, i + 1, sum + candidates[i], used);
+            		path.RemoveAt(path.Count - 1);
+            		used[i] = false;
+       		 }
+	}
+思路：组合不能重复，则在同一树层出现重复元素的时候就要跳过该节点，加入uesd数组来确认每个元素是否加入了path。在遍历的过程中，如果used[i - 1] == false，则candidates[i - 1]和candidates[i ]必定在同一树层，此时如果candidates[i - 1] == candidates[i ](排序后)则就该跳过该节点。
+//引入used数组来解决数组中存在重复元素时组合不能重复的情况
+// used[i - 1] == true，说明candidates[i - 1]和candidates[i ]必定在同一树枝
+// used[i - 1] == false，说明candidates[i - 1]和candidates[i ]必定在同一树层
+
+5.分割回文串：给你一个字符串 s，请你将 s 分割成一些子串，使每个子串都是 回文串 。返回 s 所有可能的分割方案。
+代码：
+    private List<IList<string>> result;
+    private List<string> path;
+    void BackTrack(string s, int startIndex)
+    {
+        if(startIndex == s.Length)
+        {
+            result.Add(new  List<string>(path));
+            return;
+        }
+        for(int i = startIndex; i < s.Length; i++)
+        {
+            if(isPartition(s, startIndex, i))
+            {
+                path.Add(s.Substring(startIndex, i - startIndex + 1));
+                BackTrack(s, i + 1);
+                path.RemoveAt(path.Count - 1);
+            }
+        }
+    }
+思路：在每一次递归的for循环中，s.Substring(startIndex, i - startIndex + 1)恰好就是分割出来的部分，解组合类题目的方法可以很巧妙地套用在这题上。相比组合题目，这类分割题目要在循环中(在方法开头也可以)加一个判断if(isPartition(s, startIndex, i)) {...}来确定该分支是否符合要求。
+
+6.复原IP地址：给定一个只包含数字的字符串 s ，用以表示一个 IP 地址，返回所有可能的有效 IP 地址，这些地址可以通过在 s 中插入 '.' 来形成。你 不能 重新排序或删除 s 中的任何数字。你可以按 任何 顺序返回答案。
+代码：
+    void BackTrack(List<string> path, List<string> result, int startIndex, string s)
+    {
+        if(path.Count != 0 && !isValid(path.Last()))
+        {
+            return;
+        }
+        if(startIndex == s.Length && path.Count == 4)
+        {
+            result.Add(string.Join(".", path));
+            return;
+        }
+        if (path.Count >= 4)
+        {
+            return;
+        }
+        for (int i = 1; i <= 3 && startIndex + i <= s.Length; i++)
+        {
+            path.Add(s.Substring(startIndex, i));
+            BackTrack(path, result, startIndex + i, s);
+            path.RemoveAt(path.Count - 1);
+        }
+    }
+思路：和分割回文串的逻辑相似，在每一次递归的for循环中，s.Substring(startIndex, i - startIndex + 1)恰好就是分割出来的部分。这里收集的path是列表，要加入result时再把他们合并。
+
+7.子集：给你一个整数数组 nums ，数组中的元素 互不相同 。返回该数组所有可能的子集（幂集）。
+代码：
+    void BackTrack(int[] nums, int startIndex)
+    {
+        for(int i = startIndex; i < nums.Length; i++)
+        {
+            path.Add(nums[i]);
+            result.Add(new List<int>(path));
+            BackTrack(nums, i + 1);
+            path.RemoveAt(path.Count - 1);
+        }
+    }
+思路：要求的结果在每个节点都出现了，而不是像之前那样只在叶子节点出现，所以每个循环过程中都要把path加入到result中。
+
+8.子集 II：给你一个整数数组 nums ，其中可能包含重复元素，请你返回该数组所有可能的子集（幂集）。
+代码：
+    List<IList<int>> result;
+    List<int> path;
+    void BackTrack(int[] nums, int startIndex, bool[] used)
+    {
+        for(int i = startIndex; i < nums.Length; i++)
+        {
+            if(i >= 1 && used[i - 1] == false && nums[i] == nums[i - 1])
+            {
+                continue;
+            }
+            path.Add(nums[i]);
+            used[i] = true;
+            result.Add(new List<int>(path));
+            BackTrack(nums, i + 1, used);
+            used[i] = false;
+            path.RemoveAt(path.Count - 1);
+        }
+    }
+思路：在子集1的基础上加上了组合不能重复的条件，使用used数组增加一个判断就可以解决这个问题，别忘了先给数组排序。
+
+9.非递减子序列：给你一个整数数组 nums ，找出并返回所有该数组中不同的递增子序列，递增子序列中 至少有两个元素 。你可以按 任意顺序 返回答案。
+数组中可能含有重复元素，如出现两个整数相等，也可以视作递增序列的一种特殊情况。
+代码：
+    void BackTrack(int[] nums, int startIndex)
+    {
+        HashSet<int> hashSet = new HashSet<int>();
+        for(int i = startIndex; i < nums.Length; i++)
+        {
+            if(path.Count != 0 && path.Last() > nums[i] || hashSet.Contains(nums[i]))
+            {
+                continue;
+            }
+            hashSet.Add(nums[i]);
+            path.Add(nums[i]);
+            if(path.Count >= 2)
+            {
+                result.Add(new List<int>(path));
+            }
+            BackTrack(nums, i + 1);
+            path.RemoveAt(path.Count - 1);
+        }
+    }
+思路：动态规划有一道最长递增子序列，它求的是最长递增子序列的长度，而这题求的是所有递增子序列本身，只能用回溯算法。数组有重复元素的问题都会涉及到组合去重，这题由于顺序不能改变，不能排序nums数组，也就没法用used数组去重，所以引入了一个哈希表。
+
+10.全排列：给定一个不含重复数字的数组 nums ，返回其 所有可能的全排列 。你可以 按任意顺序 返回答案。全排列就是所有数组元素全用上的排列。
+代码：   
+    List<IList<int>> result;
+    List<int> path;
+    void BackTrack(int[] nums, bool[] used)
+    {
+        if(path.Count == nums.Length)
+        {
+            result.Add(new List<int>(path));
+            return;
+        }
+        for(int i = 0; i < nums.Length; i++)
+        {
+            if (used[i] == true)
+            {
+                continue;
+            }
+            path.Add(nums[i]);
+            used[i] = true;
+            BackTrack(nums, used);
+            used[i] = false;
+            path.RemoveAt(path.Count - 1);
+        }
+    }
+思路：相比组合类题目，排列类题目的每个树层都是从数组的开头开始遍历的，所以不用startInex记录上一层的位置，即i=0而不是i=startIndex。这时为了避免一个树枝重复使用同一个元素，要使用used数组记录树枝上使用过的元素。即组合题目不需要树枝去重而排列题目需要。
+
+11.全排列 II：给定一个可包含重复数字的序列 nums ，按任意顺序 返回所有不重复的全排列。与全排列1的区别是这题有重复元素。
+代码：
+    List<IList<int>> result;
+    List<int> path;
+    void BackTrack(int[] nums, bool[] used)
+    {
+        if(path.Count == nums.Length)
+        {
+            result.Add(new List<int>(path));
+            return;
+        }
+        for(int i = 0; i < nums.Length; i++)
+        {
+            if (used[i] == true || i >= 1 && used[i - 1] == false && nums[i] == nums[i - 1])
+            {
+                continue;
+            }
+            path.Add(nums[i]);
+            used[i] = true;
+            BackTrack(nums, used);
+            used[i] = false;
+            path.RemoveAt(path.Count - 1);
+        }
+    }
+思路：由于数组有重复元素，所以需要树层去重；同时由于这道题是排列题目，i从0开始，所以还要进行树枝去重。故使用used数组同时进行树枝和树层的去重。
+
+12.N皇后：n 皇后问题 研究的是如何将 n 个皇后放置在 n×n 的棋盘上，并且使皇后彼此之间不能相互攻击。给你一个整数 n ，返回所有不同的 n 皇后问题 的解决方案。
+代码：
+    List<IList<string>> result;
+    char[,] path;
+    void BackTrack(bool[,] matrix, int hang, int n)
+    {
+        for (int i = 0; i < n; i++)
+        {
+            bool isFlag = false;
+            for (int x = 0; x < hang; x++)
+            {
+                for (int y = 0; y < n; y++)
+                {
+                    if ((x + y == i + hang || x - y == hang - i || y == i) && matrix[x, y] == true)
+                    {
+                        isFlag = true;
+                        break;
+                    }
+                }
+                if (isFlag) break;
+            }
+            if (isFlag) continue;
+            path[hang, i] = 'Q';
+            matrix[hang, i] = true;
+            if (hang == n - 1) result.Add(GetList(n));
+            BackTrack(matrix, hang + 1, n);
+            matrix[hang, i] = false;
+            path[hang, i] = '.';
+        }
+    }
+思路：一般的回溯算法给的数组是一维的，八皇后相当于给了个二维的数组。了解这点后在给的二维数组上按照回溯的思想做也不难。记得初始化给二维数组matrix数组填充'.'。
+
+回溯算法总结：
+1.牢记回溯算法的固定形态
+void backTracking(参数待定，可以需要的时候再加)//一般是nums数组、startIndex必备
+{
+	if(终止条件)//当结果分布在叶子节点时存在这一判断，需要自己判断是否有这一部分
+	{
+		收集结果;
+		return;
+	}
+	for(遍历集合元素)
+	{
+		if(xxx)continue;//当要求进行树层去重(数组有重复元素)或树枝去重(排列类题目)有该判断部分
+		添加节点影响；
+		进行递归；//多数时候是BackTrack(nums, i + 1,xxx)，排列类题目是i而不是i+1，需要自己判断
+		删除节点影响；
+	}
+	return ;
+}
+2.回溯算法经典问题：
+2.1组合：基础结构，有startIndex参数，i = startIndex，BackTrack(startIndex + 1);。
+2.2分割字符串：特点是for循环中s.Substring(startIndex, i - startIndex + 1)刚好是本次循环要鉴定和添加的字符串，在循环开始时要鉴定该子串是否合格。
+	for(int i = startIndex; i < s.Length; i++)
+        {
+            if(isPartition(s, startIndex, i))
+            {
+                path.Add(s.Substring(startIndex, i - startIndex + 1));
+                BackTrack(s, i + 1);
+                path.RemoveAt(path.Count - 1);
+            }
+        }
+相比组合就多了个判断而已。
+2.3子集：特点是结果分布在各个节点而不只是叶子结点，所以每个循环过程中都要有path加入到result中。当数组存在重复元素要去重的时候需要用used数组加判断条件。
+2.4排列：排列类题目的每个树层都是从数组的开头开始遍历的，所以不用startInex记录上一层的位置，即i=0而不是i=startIndex，BackTrack(s, i)而不是BackTrack(s, i + 1);。这时为了避免一个树枝重复使用同一个元素，要使用used数组进行树枝去重 if (used[i] == true)。当数组元素可以重复的时候要同时进行树层去重(记得先排序)。
+
+注意：
+多数回溯题目提供一个nums数组，当数组元素会重复时可能会涉及到组合去重问题，可以使用排序+used解决。排列问题用哈希表解决。
+result添加path的时候记得要添加值拷贝new List<int>(path)而不光是一个引用拷贝path。
+
+
+
+
