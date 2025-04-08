@@ -1,4 +1,6 @@
 --------------------------------------------------------------------------一、基础语法--------------------------------------------------------------------------
+3种面向对象特征，4种类自动提供的方法，5个内存存储区域，6个？，9种重要STL容器
+
 C++类对象创建方式：
 class Son{
 }			//类的声明
@@ -22,6 +24,35 @@ int* a = new int(1); cout << *a;	//解引用
 注意：
     1.定义(分配空间)不等于赋值，全局变量会自动赋值为0，而局部变量或类成员不会，要自己赋值。
     2.类对象在定义时会自动调用构造函数，使类方法可以调用，但是类成员也需要手动初始化(一般在构造函数中)，不然也无法使用。
+
+数组相关：
+    1.数组分为静态数组(栈上)和动态数组(堆上)，分别定义方式如下：
+        int arr[100];		//只定义，未初始化，值为一个负数
+        int arr[100] = { 1 };	//定义且初始化，第一个值为1，其余值被初始化为0
+        int* arr = new int[5];	//只定义，未初始化，值为一个负数
+        int* arr = new int[5]{ 1 };	//定义且初始化，其余值初始化为0
+
+algorithm头文件中的重要方法(静态数组、动态数组、容器中都适用)：
+    1、std::find：查找元素
+            int arr[] = {5, 3, 8, 1, 2};
+            auto it = std::find(arr, arr + 5, 3);  // 查找元素 3
+            if (it != arr + 5) {
+                std::cout << "Found!" << std::endl;  // 找到元素 3
+            }
+    2、std::sort：排序*
+            int arr[] = {5, 3, 8, 1, 2};
+            std::sort(arr, arr + 5);
+            bool compare(int a, int b) {
+   	 return a > b;  // 自定义排序规则，从大到小
+            }
+            std::sort(arr, arr + 5, compare);
+    3、std::reverse：反转顺序*
+            int arr[] = {5, 3, 8, 1, 2};
+            std::sort(arr, arr + 5);
+    4、std::copy：拷贝元素
+            int arr[] = { 1, 2, 3, 4, 5 };
+            int arr2[5];
+            std::copy(arr, arr + 5,  arr2);  
 
 分辨常量指针和指针常量：从左向右读。
 int a = 1;
@@ -127,6 +158,10 @@ void*类型指针只有强制转化为一个具体类型指针后才能用*访�
 int main() {
     Empty e;  // Empty类中什么都没有，但如果是0字节那么栈后续的插入对象就乱套了，于是e占1字节
 }
+
+很多头文件中都存在一个命名空间std，例如iostream、vector、map等，用于区分用户自己定义的vector、map等对象。
+所以STL容器的创建一般前方都有std::xxx，例如std::vector。
+
 --------------------------------------------------------------------------二、类与对象--------------------------------------------------------------------------
 C++中类可以创建在栈上或创建在堆上，唯一的区别是 是否使用new！
 Student stu = Student();		//这是标准写法！创建在栈上。
@@ -254,7 +289,6 @@ void test()
 	Base e = Derived(); //对象切片导致子类对象调用基类方法，而不是子类方法
 	ex.printError(); //输出基类方法！
 }
-
 -----------------------------------多态-----------------------------------
 多态分为静态多态和动态多态。
 静态多态也叫编译多态，由函数重载实现。动态多态也叫运行多态，由函数重写实现。
@@ -298,6 +332,73 @@ public继承：父类中各成员不变。(也是C#的继承方式)
 protected继承：父类中public成员对于子类变成protected。
 private继承：父类中public、protected成员对于子类变成private。
 
+当一个类继承自两个类，且这两个类有相同的成员名，则需要标明作用域：
+#include <iostream>
+using namespace std;
+class A {
+public:
+        int value;
+        A(int v) : value(v) {}
+};
+class B {
+public:
+        int value;
+        B(int v) : value(v) {}
+};
+class C : public A, public B {
+public:
+        C(int a_value, int b_value) : A(a_value), B(b_value) {}
+        void printValues() {
+                cout << "A's value: " << A::value << endl;
+	cout << "B's value: " << B::value << endl;
+        }
+};
+int main() {
+        C obj(10, 20);
+        obj.A::value = 3;
+        obj.printValues();  
+        return 0;
+}
+
+菱形继承问题：两个子类继承自一个父类，同时又有一个孙子类同时继承这两个子类。
+  A
+ / \
+B   C
+ \ /
+  D
+后果：导致孙子类中变量具有二义性。d._a报错，不知道是从B来的还是从C来的。即使没有A，当B和C成员同名时也有这个问题。
+解决方式：
+1.标明成员的作用域，像上一个问题那样解决。
+2.让类B/C虚拟继承A
+    #include <iostream>
+    using namespace std;
+    class Base {
+    public:
+        int value;
+        Base(int v) : value(v) {}
+    };
+    class A : virtual public Base {
+    public:+
+        A(int v) : Base(v) {}
+    };
+    class B : virtual public Base {
+    public:
+        B(int v) : Base(v) {}
+    };
+    class C : public A, public B {
+    public:
+        C(int a_value, int b_value) : A(a_value), B(b_value) {}
+        void printValue() {
+            // 直接访问 value，因为只有一个 Base 类实例
+            cout << "value: " << value << endl;  // 此时 value 来自 Base
+        }
+    };
+    int main() {
+        C obj(10, 20);
+        obj.printValue();  // 输出 value
+        return 0;
+    }
+
 --------------------------------------------------------------------------三、内存管理--------------------------------------------------------------------------
 C++存储区域5个：
 内存区域	           	存储内容				管理方式			生命周期		特点
@@ -323,15 +424,282 @@ class继承的默认方式是private，struct继承的默认方式是public。
 
 
 --------------------------------------------------------------------------四、STL标准模板库--------------------------------------------------------------------
+C++STL(standard template library)标准模版库：包含容器、算法、迭代器。
+STL容器的内容基本都在各个容器头文件(vector、dequeue、list等)的std命名空间中，使用前要加上std::xxx以区分用户自己定义的容器类型，例如std::vector。
+STL算法的内容基本都在algorithm头文件的std命名空间中，例如find/sort/copy/reverse等。
+容器可以分为顺序式容器和关联式容器，以及C++11引入的无序关联式容器三种
+顺序式容器：按照元素插入顺序组织数据，适合需要保持元素顺序或频繁增删末尾元素的场景，底层为数组。
+    *vector		动态数组，支持随机访问，末尾插入/删除快
+    *deque		双端队列，支持头尾两端的快速插入/删除
+    *list		双向链表，任意位置插入/删除快，不支持随机访问
+    array		固定大小的数组容器，栈上分配
+关联式包括：按照键值对（key-value）或键（key）自动排序，通常是用平衡二叉搜索树（如红黑树）实现的。
+    *set		自动排序、不重复的集合
+    *map		键值对，按键自动排序
+    multiset	允许重复元素的 set
+    multimap	允许重复键的 map
+无序关联式容器：这是 C++11 引入的新容器，底层基于 哈希表，不保证顺序，但查找速度更快（平均 O(1)）。
+    unordered_set		无序、不重复元素集合
+    unordered_map		无序键值对容器
+    unordered_multiset	无序重复集合
+    unordered_multimap	无序重复键值对
+至于*stack和*queue，他们是由deque封装而来，不属于以上某一类。
 
+容器：
+string(注意了，string也属于STL)对标C#的string：
+s.find('a')，查找字符，对标IndexOf('a')
+s.compare(s2)，比较阿斯克码值，对标CompareTo()
+s.insert("a")，只能插字符串而不能插字符,对标Insert()
+s.erase(int pos, int num = 1)，删除pos位置的字符,对标Remove(int pos)
+s.substr(int pos, int num = 1)，截取字符串，对标Substring(int pos, int num = 1)
+s.push_back("a")，插入字符a
+s.begin()/end()获取第一个字符/最后一个字符之后的迭代器
+s.replace()有很多重载，比较有用的是(start, off, char*)，修改字符串
 
+vector<>：向量，单端动态数组，内部由一个数组实现
+其迭代器是随机访问迭代器
+对标C#中的List<>
+vector在栈上创建vector对象，内部存有指向堆中数组元素的指针和数组元素的大小。
+初始化：
+       std::vector<int> v;			//初始化一个空的容器
+       vector<int> v1(5);          			// 5个默认初始化元素（0）
+       vector<int> v2(5, 100);      			// 5个值为100的元素
+       vector<int> v3 = {1, 2, 3};  			// 初始化列表
+       vector<Person> vec1 = {Person(1),Person(2)};	// 初始化列表
+       vector<int> vec(arr, arr + size);		// 使用数组的指针模拟迭代器来初始化
+常用方法：
+v.size()，获取容器元素个数
+v.capacity()，获取容量，为只读
+v.resize(num)，修改容器长度
+v.reserve(int num)，预设容量大小，一般在大致知道要插入的元素数量时，提前设置容量避免多次扩容
+v.empty()，判断容器是否为空
+v.push_back(value)，尾部添加元素
+v.pop_back()，尾部删除元素
+v.begin()，返回指向第一个元素的迭代器，无对应
+v.end()，无对应，返回指向最后一个元素的下一个位置的迭代器1
+v.front()，返回第一个元素
+v.back()，返回最后一个元素
+v.insert(iterator my.begin() + 3, int val)，在下标为3处插入，C++只能用迭代器不能用序号
+v.insert(iterator my.begin() + 3, iterator other.begin(),iterator other.end())
+v.erase(iterator my.begin() + 3)，删除下标为3的元素
+v.erase(iterator  my.begin() + 3, iterator  my.begin() + 4)，删除一段元素(下标3到4的元素)
+v.clear()，清除所有元素
+find(v.begin(),v.end(),int value)，是algorithm库中std作用域的方法，是STL中的算法，寻找某值第一次出现的位置，返回其迭代器，找不到则返回v.end()
+sort(v.begin(), v.end())，是algorithm库中std作用域的方法，是STL中的算法，从小到大排序，有另一个重载类型可以在第三个参数传入函数以指定排序方式
+注意：使用迭代器遍历vector来删除某个元素时，小心迭代器失效，要获取返回的迭代器
+    // 使用迭代器遍历并删除偶数
+    for (auto it = v.begin(); it != v.end();) {
+        if (*it % 2 == 0) {
+            it = v.erase(it);  // 删除元素并更新迭代器
+        } else {
+            ++it;  // 如果没有删除，正常前进迭代器
+        }
+    }
 
+如果vector中存的是自定义类型，则需要重载==运算符以使用find：
+bool comparePersons(const Person& a, const Person& b) {
+    return a.name == b.name && a.age == b.age;
+}
+int main(){
+      vector<Person> people = { {"Alice", 30}, {"Bob", 25}, {"Charlie", 35} };
+      auto it = find(people.begin(), people.end(), Person("Bob", 25));
+}
+如果想要使用sort有两种方式：
+1.在类中重载<运算符
+    bool operator<(const Person& other) const {
+        return age < other.age; // 根据年龄排序
+    }
+2.在类外自定义比较函数
+bool compareByName(const Person& a, const Person& b) {
+    return a.name < b.name; // 根据名字排序
+}
+用交换技巧来修整vector过剩容量：
+vector<int> tmp = v;     //使用拷贝构造函数复制了v，容量等于容器内元素数量
+ v.swap(tmp);	     //v和tmp交换数据，容量降下来了
 
+deque<>:双端数组，内部有一个地图(map)和多个内存块组成。地图中存有各内存块地址(即一个地址数组)，每块内存块中包含一段数组，块与块之间不连续，内存块的大小是相同的。
+其迭代器是随机访问迭代器
+优点：头插、头删效率高于vector
+缺点：由于段与段之间不连续，访问效率效率低于vector
+push_front(int val)，头插
+push_back(int val)，尾插
+pop_front()，头删
+pop_back()，尾删
+其他方法用法和vector容器几乎相同
+deque没有capacity和他的设置，因为它和list一样设计的初衷就是可以无限增长(内存不连续)
+双端数组可以看做是vector的兄弟，差别不大，在C#中没有对应的类型
 
+stack<>与queue<>：栈与队列，内部由数组实现，不允许用大括号初始化
+定义：
+std::stack<int> s;
+std::queue<int> q;
+栈和队列都只有几个接口：
+push(int val)，入栈/队列，对应C#栈的Push(int val)和队列的Enqueue(int val)
+pop()，出栈/队列，对应C#栈的Pop()和队列的Dequeue()
+empty()，判断是否为空
+size()，获取大小，对应Count属性
+其中栈的特殊接口：
+top()，返回栈顶元素，对应Peek()
+队列的特殊接口：
+front()，返回队列头的元素，对应Peek()
+back()，返回队列尾的元素，无对应，但是Linq扩展方法中有Last()方法
+两者都没有获取迭代器的接口
 
+list：双向循环链表，由节点构成。节点由数据域和指针域构成，指针域有两个指针，一个是指向前一个节点的指针，另一个是指向后一个节点的指针。
+优点：插入删除速度快
+缺点：遍历速度慢，占用空间大
+list的迭代器是双向迭代器，其迭代器只能前移或者后移(迭代器只支持++和--操作，而不支持+和-，即使+1也不行，也不能直接用[]访问元素
+list由于是链表，插入和删除不会造成原有的迭代器失效，而vector会
+从C++11开始允许使用大括号初始化list了
+赋值：=赋值、assign(iterator begin, iterator end)、assign(int num, int val)
+接口：
+size()，返回大小
+empty()，返回是否为空
+resize(int val)，设置大小
+push_front()，插入头部
+push_back()，插入尾部
+pop_front()，删除头部
+pop_back()，删除尾部
+insert(iterator it, int val)，插入元素
+insert(iterator pos, iterator begin, iterator end)，插入一段元素
+erase(iterator it)，删除元素
+erase(iterator begin, iterator end)，删除一段元素
+remove(int val)，删除所有等于val的数据
+front()，返回第一个元素
+back()，返回最后一个元素
+begin()，返回指向第一个元素的迭代器
+end()，返回指向最后一个元素后一个位置的迭代器
+reverse()，翻转链表，相比algorithm的翻转方法性能更好
+clear()，清空容器
+l.sort()，排序，因为不支持随机访问迭代器的容器不能用标准快排算法(即不能用sort(li.begin(), li.end()))，所以list自带了一个sort成员方法
+l.sort(comparor)，使用特定的排序算法(例如从大到小)，comparor是自己实现的排序方法，返回值是bool，和C#返回值是int不同
+find(l.begin(),l.end(),int value)，是STL的方法，寻找某值第一次出现的位置，返回其迭代器，找不到则返回v.end()
+对于自定义类型的list，排序一定要指定排序算法
+由于无法直接在迭代器上+或-，当需要在下标为50处插入或删除时，可以使用std::advance方法来移动迭代器，它来自iterator头文件(也被vector/list等文件引用，所以一般引入 list就够了)：
+int main(){
+    std::list<int> myList;
+    for (int i = 1; i <= 100; ++i) {
+        myList.push_back(i);
+    }
+    auto it = myList.begin();
+    std::advance(it, 50);  // 第51个元素（下标为50）
+    myList.insert(it, 999);  
+}
 
+set/multiset：集合
+set的特点：
+    自动排序：元素会在插入时根据大小自动排序（默认用 < 比较）。
+    元素唯一：不允许有重复元素(multiset允许)。
+    底层实现：作为关联式容器，底层为红黑树。
+    迭代器类型：双向迭代器（bidirectional iterator）
+set初始化：
+    std::set<int> s;			// 最正常的空初始化
+    std::set<int> s = {3, 1, 4, 1, 5};  	// 大括号初始化，能够自动去重并排序
+    int arr[] = {4, 2, 7, 2, 3};
+    std::set<int> s(arr, arr + 5);  		// 使用数组初始化(也可使用vector)
+    std::set<int, std::greater<int>> s2; 	// 降序 set，也可自己写greater，要写成仿函数，下面会提及
+接口：
+    s.insert(int val)：
+        对于set：插入可能会失败，所以会返回一个对组pair<set<int>::iterator, bool>，检查pair的second属性可以判断插入是否成功，无论成功与否都会返回容器中指向这个数字的迭代器
+        对于multiset：插入必定成功，不用获取返回值
+    s.size()
+    s.empty()
+    s.begin()
+    s.end()
+    s.erase(iterator it)，移除迭代器指向的元素
+    s.erase(iterator begin, iterator end)
+    s.erase(int val)，移除特定元素
+    s.find(int val)，关联式容器有自己的find方法，元素存在则返回指向该元素的迭代器，不存在就返回end()，可以通过检查是否==s.end()来判断元素是否在set中。
+    s.count(int val)，统计元素的个数，在set中只能为0或1，在multiset中有更多，可冒充find方法看返回值是否为0来判断是否存在
+通过在模版中传入第二个仿函数参数来实现自定义排序规则。
+仿函数(Function Object)是一种通过重载operator()来模拟函数行为的类。在该类实例化后可以当做普通的函数调用，优势作为一个类，相比函数可以保存状态并且具备更强的灵活性。
+class Greater {
+public:
+    bool operator()(int x, int y){
+        return x > y;//降序排序
+    }
+};
+int main(){
+    set<int, Greater> ss;
+}
+注意：set和map作为关联式容器，提供了自己的find方法
+注意：当模版的参数是自定义类型时，必须传入第二个参数指定排序规则，因为编译器不知道怎么排序。
 
+unordered_set/unordered_multiset：无序集合
+unordered_set特点：
+    基于哈希表（hash table）实现，使用哈希函数来决定元素的位置。
+    元素的顺序是无序的。由于使用哈希表，元素在集合中的顺序取决于它们的哈希值，而不是它们的键值。
+    使用哈希表，插入、删除和查找操作的 平均时间复杂度是 O(1)，但最坏情况下（哈希冲突较多）可能退化到 O(n)。
+    由于是无序的，所以没有排序操作，也不需要比较函数。
+   当不关心元素的顺序，而更关注查找效率时，std::unordered_set会更适合，而set更适合对元素顺序有要求的场景。
+unordered_set主要接口：与set相同
 
+map/multimap：有序字典
+map特点：
+    自动排序：map 会根据键的值进行自动排序，默认情况下按升序排序。
+    键唯一性：每个键在 map 中只能出现一次，若用insert插入已存在的键将插入失败，若用operator[]更新已有的键值对可以成功更新。
+    元素是键值对：每个元素是一个键值对（pair<const Key, T>），其中 Key 是键类型，T 是值类型。
+    基于红黑树：map 是基于红黑树实现的，因此具有对数时间复杂度的插入、删除和查找操作。
+map优点：
+    高效的查找、插入、删除操作，时间复杂度为O(logn)
+map初始化方式：
+    std::map<int, std::string> m;					//空初始化
+    std::map<int, std::string> m = {{1, "one"}, {2, "two"}, {3, "three"}};	//初始化列表
+    std::map<int, std::string> m2 = m1;  				//拷贝构造函数
+    std::map<int, std::string> m2(m1.begin(), m1.end());  		//使用另一个map的迭代器
+map的主要接口：
+    m.size()
+    m.empty()
+    m.begin()
+    m.end()
+    m.insert(1, 2);		//插入已存在的键值对不会覆盖原有的值
+    m[1] = 2;		//用=赋值改变会更新原有的值
+    m.erase(iterator pos)
+    m.erase(iterator begin, iterator end)
+    m.erase(T key)	//根据key值删除
+    m[4] = 40，相当于插入了一个键值对pair<int, int>(4, 40)
+    m.find(key)，寻找key是否存在，存在返回指向的迭代器，不存在返回end()
+    m.count(key)，查看key的数量，map中为0或1，multimap不是
+使用begin和end得到的是指向pair的迭代器，获取key值用it->first，获取值用It->second
+使用仿函数可以修改排序的规则，使用方法和set类似。
+key的类型是自定义类型时，必须要传入排序规则参数，不然就会报错。
+
+unordered_map/unordered_multimap：无序字典
+unordered_map的特点：
+    基于哈希表（hash table）实现，键值对的存储顺序是不确定的，元素的排列顺序不依赖于键的顺序。
+    插入和删除操作的平均时间复杂度为 O(1)，但在最坏情况下(哈希冲突较多)退化为 O(n)。
+    适合不关心元素顺序，而更关心快速查找的场景，而map更适用于需要键有序的场景。
+    由于是无序的，所以没有排序操作，也不需要比较函数
+unordered_map的接口：和map相同
+    m.size()
+    m.empty()
+    m.begin()
+    m.end()
+    m.insert(1, 2)，插入已存在的键值对不会覆盖原有的值
+    m[1] = 2，用=赋值改变会更新原有的值
+    m.erase(iterator pos)
+    m.erase(iterator begin, iterator end)
+    m.erase(T key)，根据key值删除
+    m[4] = 40，相当于插入了一个键值对pair<int, int>(4, 40)
+    m.find(key)，寻找key是否存在，存在返回指向的迭代器，不存在返回end()
+    m.count(key)，查看key的数量，map中为0或1，multimap不是
+
+9个容器总结：
+    vector：适用于频繁访问元素和追加元素，且插入和删除操作不常发生时。
+    deque：适用于需要在两端进行快速插入和删除操作的场景。
+    list：适用于频繁插入和删除元素，尤其是在容器中间进行操作时。
+    stack：适用于后进先出（LIFO）需求的场景，如函数调用栈。
+    queue：适用于先进先出（FIFO）需求的场景，如任务队列。
+    set：适用于存储唯一元素并需要自动排序的场景。
+    map：适用于存储键值对，并且需要自动排序的场景。
+    unordered_set：适用于存储唯一元素并要求快速查找、插入和删除的场景，不关心顺序。
+    unordered_map：适用于存储键值对并要求快速查找、插入和删除的场景，不关心顺序。
+
+注意：
+    1.vector和deque容器有迭代器失效风险，注意在插入和删除后更新迭代器为insert、erase的返回值。
+    2.set和map中的元素进入时自动排序，故存储自定义类型时必须要在模板的第二个参数指定比较的仿函数或重载比较运算符。
+    3.只有vector/deque支持随机访问。
+    4.list自己提供了sort方法，set/map自己提供了find方法。
 
 --------------------------------------------------------------------------五、高级特性--------------------------------------------------------------------------
 decltype关键字：是declaration type(声明类型)的缩写。可以通过括号中表达式的类型返回相应的数据类型。
@@ -363,8 +731,7 @@ auto lambda = [x, &y] {
 捕获：用于将外部作用域的变量传递给 lambda 表达式。它控制 lambda 如何与外部变量交互。
 参数：用于将数据传递给 lambda 表达式进行计算或处理，类似于普通函数的参数。
 
-
-
+循环引用问题如何解决：通常只有shared_ptr会引起循环引用问题。解决方法是把其中一个shared_ptr换成weak_ptr。
 
 
 
