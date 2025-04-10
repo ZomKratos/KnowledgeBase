@@ -73,8 +73,12 @@ int * c = &a;//错误
 
 指针的值是一个地址，而不是对象。
 所以赋值的时候要用：
-int a = 10;
-int* b = &a;
+        int a = 10;
+        int* b = &a;
+
+指针的值是一个地址，指针之间可以进行赋值以指向同一个地址。
+        int* a = new int(1);
+        int* b = a;
 
 delete在什么情况使用：
 1.在一个方法中如果用new创建了对象，那么在方法结束前要把它手动delete掉，不然就会内存泄漏。
@@ -349,14 +353,117 @@ AVL树 vs 红黑树
 链表			O(1)		O(1)		O(n)		O(n)
 红黑树			O(logn)		O(logn)		O(logn)		O(logn)
 
+C++中char[]的长度用sizeof(crr)求，求得的长度会是正常长度+1，因为字符串常量末尾会自动加上结束符\0。
+
+C++的栈默认只有1MB(C#应该也是)，可以在VisualStudio中调整。而C++是允许在栈上创建数组的，所以int arr[260000];会直接报错栈溢出。
+所以C++中较大的数据结构建议创建在堆上而不是栈上。
+
+sizeof()关键字输出的是这个变量所占字节的大小，所以
+int arr[100]；
+char crr[100];
+sizeof(arr);//400
+sizeof(crr);//100
+
+在C++中，数组是不能给数组赋值的，crr = crr2;是错误的。
+但当向实参和形参都为数组时，编译器会用一个指针来接收数组
+例如：
+void Func(int arr[]) {
+    cout << sizeof(arr);		//输出的是4而不是数组的字节数
+}
+
+C++位运算中只有异或符号^而没有同或，同或可以用~(a ^ b)表示。
+其他位运算符：
+        &：按位与，对应位置上的两个操作数都为 1 时结果为 1，否则为 0。
+        |：按位或，对应位置上的两个操作数中只要有一个为 1，结果就为 1。
+        ^：按位异或，对应位置上的两个操作数不相同则结果为 1，相同则结果为 0。
+        ~：按位取反，将操作数的每一位取反，即 0 变为 1，1 变为 0。
+        <<：左移运算符，将操作数的所有位向左移动指定的位数，实际上就是乘以二。
+        >>：右移运算符，将操作数的所有位向右移动指定的位数。实际上就是除以二。
+        C#中也有这些运算符。
+
+使用cmath库的pow方法来获取幂。
+
+常量指针能指向变量，普通指针不能指向常量。
+
+STL的erase(iterator i)方法删除元素会使当前迭代器失效并返回指向下一个元素的迭代器iterator，所以正确的在遍历中使用erase的方式是：
+        vector<int> vec{1,2,3,4,5};
+        for (vector<int>::iterator i = vec.begin(); i != vec.end();) {
+                if (*i == 3)
+                        i = vec.erase(i);		//获取删除后返回的迭代器
+                else
+                        i++;
+	}
+        }
+
+将数字字符串转为数字类型：使用string库的stoi(str)方法
+        #include <iostream>
+        #include <string>
+        using namespace std;
+        int main() {
+	string s = "123";
+	int i = stoi(s);
+	cout << i;
+        }
+若字符串中存在非数字则会报错。
+string库中还有stol/stof/stod等转long/float/double类型的方法。
+
+字符数组转字符串：用构造函数或赋值运算符可直接转换
+        char arr[] = "Hello";
+        string str(arr);		//构造函数
+        str = arr;		//赋值运算符
+字符串转字符数组：使用c_str()方法把字符串转化为const char*，再用strcpy(arr, str)把const char*复制到字符数组中。
+        std::string str = "Hello";
+        char arr[100];
+        strcpy(arr, str.c_str()); 	//c_str()方法获取一个字符串的const char*格式
+       
+int转string类型：使用string库的to_string(num)方法
+        int num = 123;
+        string str = std::to_string(num);  // "123"
+
+char转string类型：使用string的构造方法
+        char c = 'A';
+        string str(1, c);//1是字符串长度
+
+检测一个字符char是否为空：
+if (vec[0] == '') 	//这是错误的
+if (vec[0] == '\0')  //这是正确的
+
+int main(){
+    char c = 'M';
+    char s1[] = { 'M','o','n','d','a','y' };
+    char s2[] = "Monday";
+    int num[] = { 1,2,3 };
+    char* cpt = &c;
+    char* spt1 = s1;
+    char* spt2 = s2;
+    int* numpt = num;
+    cout << cpt << endl;		//输出M烫烫??帔 ，是乱码 
+    cout << spt1 << endl;		//输出Monday烫烫烫烫烫烫蘉烫烫M?p鹽 ，是乱码
+    cout << spt2 << endl;    		//输出Monday ，是正确的输出
+    cout << numpt << endl;		//输出00D9FA90 ，是地址
+}
+原理：
+1.cout一个char类型会将其当做一个C风格的字符串(以\0结尾)，于是会一直输出乱码到找到一个\0才停止输出，所以想要输出一个char类型需要char str[] = { c, '\0' };然后输出str。
+2.cout字符指针并不会正常输出指针指向的地址(输出int指针会输出地址)，而是输出指针指向地址存的字符，并且会从该字符位置开始向后读取，直到遇到结束符号'\0'才会停止。
+3.以字符串赋值字符数组，字符串末尾会自动加上\0结束符。以字符数组赋值字符数组变量，字符数组末尾不会自动添加\0结束符，于是会输出乱码直到遇到\0。
+注意：在用初始化列表初始化字符串数组时记得最后一个元素填\0。
+
+在C++中，实现多态有以下三种方式：
+	虚函数（Dynamic Binding）
+	函数重载（Function Overloading）
+	模板（Templates）
+
+不能声明为虚函数的有：普通函数（非成员函数）；静态成员函数；内联成员函数；构造函数；友元函数。
+
+使用xxx() = delete;删除默认生成的函数，使用virtual xxx() = 0声明纯虚函数。
 --------------------------------------------------------------------------二、类与对象--------------------------------------------------------------------------
 C++中类可以创建在栈上或创建在堆上，唯一的区别是 是否使用new！
-Student stu = Student();		//这是标准写法！创建在栈上。
-Student stu;			//缩略写法，在定义时会自动调用构造函数
+Student stu = Student();		//标准写法，创建在栈上。
+Student stu;			//缩略写法，也会调用构造函数，只有创建在栈上才能用这个写法！
 Student stu();			//坑爹写法，仅仅声明了一个返回值为Student的方法，而不是定义
 Student stu(c, 15, 92.5f);		//有点坑爹的写法，虽然是正常调用了构造函数
-Student* pstu = new Student();		//创建在堆上
-Student* pstu = new Student(c, 15, 92.5f);	//创建在堆上
+Student* pstu = new Student();		//创建在堆上，没有缩略写法！
+Student* pstu = new Student(c, 15, 92.5f);	//创建在堆上，没有缩略写法！
 注意：
 创建在堆上的类对象new的返回值是一个指针，必须要用指针来接收这个值。同时这意味着存在堆上的类要用指针才能调用，指针调用一个类的的成员要用->。
 创建在栈上的类对象的赋值操作是值拷贝，改变其中一个类的值另一个类不会改变。
@@ -706,6 +813,33 @@ public:
     }
 如果不想在此时调用，则需要把类B成员改为B指针，在构造函数或别的地方调用B的构造函数。
 //C#中由于所有类都相当于指针，所以实例化A不会调用类B的构造函数。即使B是一个结构体也不会调用B的构造函数。
+
+使用expicit(明确的)修饰的构造函数变为显式构造函数，作用是防止编译器调用构造函数时进行隐式类型转换。
+正常没有explicit修饰时：
+class PartTool {
+public:
+        int value;
+        void Func() {
+                cout << value;
+        }
+        PartTool(int a):value(a){}
+};
+int main() {
+        PartTool pt1 = 2;	//将int类型隐式转化为PartTool类型
+        PartTool pt2(2)		//在使用explicit后只能正常显式地调用构造函数
+        pt.Func();
+}
+显式构造函数主要用于确保代码在创建对象时是显式、明确的。这样能清楚地知道每次对象的创建方式，从而减少了可能的错误和不清晰的行为。
+
+类模版：在类前一行加上template<class T1, class T2>即可
+        template<class T1, class T2>
+        class A { 
+	xxx
+        }
+C#中直接在类名后面加：
+        class MyClass<T>
+        {
+        }
 --------------------------------------------------------------------------三、内存管理--------------------------------------------------------------------------
 C++存储区域5个：
 内存区域	           	存储内容				管理方式			生命周期		特点
@@ -805,6 +939,7 @@ sort(v.begin(), v.end())，是algorithm库中std作用域的方法，是STL中�
             ++it;  // 如果没有删除，正常前进迭代器
         }
     }
+注意：vector创建的数组位于堆上，并且由于实现了深拷贝的拷贝构造函数，所以用vec1来初始化vec2时，改变vec2不会同时改变vec1。
 
 如果vector中存的是自定义类型，则需要重载==运算符以使用find：
 bool comparePersons(const Person& a, const Person& b) {
@@ -1041,12 +1176,122 @@ auto lambda = [x, &y] {
 捕获：用于将外部作用域的变量传递给 lambda 表达式。它控制 lambda 如何与外部变量交互。
 参数：用于将数据传递给 lambda 表达式进行计算或处理，类似于普通函数的参数。
 
-循环引用问题如何解决：通常只有shared_ptr会引起循环引用问题。解决方法是把其中一个shared_ptr换成weak_ptr。
+析构函数被调用时机：
+1.局部类对象离开作用域，调用析构函数。
+2.对指向对象的指针使用delete，调用析构函数。
+3.类成员对象在所属对象被销毁时，调用析构函数。
+4.子类继承自父类，子类销毁时会顺便调用父类析构函数函数。
 
-shared_ptr底层实现：一个指向对象的指针和一个int类型指针(计数器)。
-循环引用问题如何解决：通常只有shared_ptr会引起循环引用问题。解决方法是把其中一个shared_ptr换成weak_ptr。
+使用expicit(明确的)修饰的构造函数变为显式构造函数，作用是防止编译器调用构造函数时进行隐式类型转换。
+如若需要，详细用法请见上文类与对象。
+显式构造函数主要用于确保代码在创建对象时是显式、明确的。这样能清楚地知道每次对象的创建方式，从而减少了可能的错误和不清晰的行为。
 
+智能指针：
+智能指针能自动释放堆中内存，防止内存泄漏，有unique_ptr、shared_ptr、weak_ptr三种，来自#include<memory>头文件。智能指针封装的裸指针必须是new出来的对象。
+智能指针本身是一个模版类，里面封装了一个指针和一些方法：
+重载*和->运算符，让智能指针能和普通指针一样使用。
+unique_ptr独占指针中使用xxx() = delete删除系统默认的拷贝构造函数和赋值运算符，为了防止多个智能指针控制同一个指针。
+shared_ptr共享指针中不删除拷贝构造和赋值运算符。
 
+unique_ptr是独占指针，独占某个资源的管理权，当该指针被销毁时，对象也会被销毁。由于没有引用计数的内存消耗，unique_ptr的性能比shared_ptr更好。使用unique_ptr后就不要再使用普通指针了。
+1.创建方式：
+        A* a = new A();
+        unique_ptr<A> uptr = unique_ptr<A>(a);
+        或
+        unique_ptr<A> uptr2 = unique_ptr<A>(new A());	//更为推荐，有这种方式不再需要显示创建普通指针，也防止了一个裸指针被多个独占指针指向的风险
+        或
+        unique_ptr<int> uptr3 = make_unique<int>(5);
+        但是不能
+        unique_ptr<A> uptr4 = a;		//不能直接把一个指针赋值给只能指针初始化，智能指针的构造函数用explicit修饰了。
+注意：用explicit修饰是为了防止指针作为实参传递给智能指针形参时，使智能指针错误地夺取控制权。
+2.成员方法：
+        uptr.get()获取裸指针。多用于调用形参是裸指针类型并且只是拿来用而不负责释放指针的方法。
+        std::move(uptr)方法转让一个裸指针的控制权，转让后uptr为nullptr，因为直接赋值是不允许的，所以有专门的方法转让裸指针。多用于调用形参是智能指针对象的方法。
+                例如：unique_ptr<int> uptr2 = move(uptr);
+        uptr.release()方法会释放智能指针，uptr不再管理这个指针并且自身指向nullptr，返回裸指针。释放的是智能指针，并且返回裸指针，多用于转交裸指针控制权。
+                例如：unique_ptr<int> uptr2((uptr.release());
+        uptr.reset()除了会释放智能指针，指向nullptr，并且会释放原有的裸指针。且该方法可以传入参数，进行只能指针的“重置(reset)”。
+                例如：uptr2.reset(new int(20)); 
+3.由于是独占指针，不支持多个智能指针指向同一个对象：
+        A* a = new A();
+        unique_ptr<A> uptr1 = unique_ptr<A>(a);
+        unique_ptr<A> uptr2 = unique_ptr<A>(a);		//直接报错
+4.由于删除了拷贝构造函数，所以调用函数作为参数不能传值，只能传引用：
+        void Func(unique_ptr<A> uptr1) {
+        }
+        int main() {
+	unique_ptr<A> uptr1 = unique_ptr<A>(new A());
+	Func(uptr1);		//报错，拷贝构造函数已被删除，想要调用把形参改为unique_ptr<A>& uptr1即可，非要传值要用move(uptr1)替代实参uptr1
+        }
+5.如果想要在删除对象时做除了delete外的额外操作，可以用仿函数自定义删除器：
+        struct MyDeleter {
+                void operator()(int* p) const {
+                std::cout << "Custom deleter (functor) called, deleting " << *p << std::endl;
+                delete p;
+            }
+        };
+        int main() {
+            std::unique_ptr<int, MyDeleter> ptr(new int(42));
+        }
+
+shared_ptr内部有两个指针成员，一个指向对象，一个指向控制块，控制块中有引用计数、删除器等等。
+shared_ptr是共享性指针，可以由多个shared_ptr指向同一个对象。其采用引用计数，当另一个shared_ptr指针指向同一个对象时，控制块的引用计数加一，当某智能指针被销毁或者reset时，引用计数减一，当引用计数为0，该对象被销毁，调用控制块的删除器，删除器调用析构函数。
+初始化方法：由于拷贝构造函数和等号运算符没有被删除，可以用一个智能指针初始化另一个智能指针
+        shared_ptr<int> sptr = shared_ptr<int>(new int(4));	//普通构造
+        shared_ptr<int> sptr2 = shared_ptr<int>(sptr);		//拷贝构造
+        shared_ptr<int> sptr3 = sptr;			//拷贝构造
+但是注意，一个裸指针只能用来构造一个智能指针，后续智能指针要用已存在的智能指针来构造：
+        int* ptr = new int(4);
+        shared_ptr<int> sptr = shared_ptr<int>(ptr);	//正确
+        shared_ptr<int> sptr2 = shared_ptr<int>(ptr);	//报错，一个裸指针只能用来构造一个共享指针。不用已有的共享指针就无法获取控制块的引用计数并相加了
+成员方法：
+        sptr.get()方法获取智能指针内部的原始指针。
+        没有release方法，因为release返回的裸指针可能会被其他共享指针使用，这是不允许的。
+        move()方法转移裸指针控制权。
+        用sptr.reset()方法重置智能指针，让智能指针指向nullptr，会让原控制块的引用计数减1。
+指定删除器：当储存的对象是动态数组时，要用delete[] ptr;删除，要手动指定删除器
+        #include <iostream>
+        #include <memory>
+        struct DeleteArrayDeleter {
+            void operator()(int* ptr) const {
+                delete[] ptr;
+            }
+        };
+        int main() {
+            int* ptr = new int[5]; 
+            std::unique_ptr<int[], DeleteArrayDeleter> uptr(ptr);  
+        }
+赋值运算符：赋值后会相应改变引用计数
+        int main() {
+	shared_ptr<int> pa1 = shared_ptr<int>(new int(2));
+	shared_ptr<int> pa2 = shared_ptr<int>(pa1);
+	shared_ptr<int> pa3 = shared_ptr<int>(pa1);
+
+	shared_ptr<int> pb1 = shared_ptr<int>(new int(3));
+	shared_ptr<int> pb2 = shared_ptr<int>(pb1);
+	shared_ptr<int> pb3 = shared_ptr<int>(pb1);
+
+	pa2 = pb3;
+	cout << pa1.use_count() << endl;		//输出2
+	cout << pb1.use_count();			//输出4
+        }
+线程安全问题：
+        shared_ptr本身不是线程安全的。
+        shared_ptr的引用计数机制是线程安全的原子操作，但shared_ptr管理的对象本身在多线程环境下操作时可能存在线程安全问题。
+循环引用：会阻止shared_ptr智能指针释放内存导致内存泄漏。
+        定义：循环引用是指两个智能指针对象内部的智能指针成员互相指向对方，导致它们的引用计数始终不为零，从而无法释放内存。
+        例子：
+        shared_ptr<A> a = make_shared<A>();
+        shared_ptr<B> b = make_shared<B>();
+        a->b_ptr = b;
+        b->a_ptr = a;
+        原因：实际上存在4个智能指针，2个局部变量，2个成员变量。
+	  在外部作用域结束时，2个局部变量被释放，但因为两个成员变量互相持有，导致最后引用计数都为1，最终两个裸指针的对象都无法释放。	
+        weak_ptr：weak_ptr是一个观察器，没有重载*和->，无法访问指针，不增加对象的引用计数，作用是与shared_ptr一起使用来解决循环依赖。
+        weak_ptr只能用shared_ptr来初始化：weak_ptr<int>wp = sptr;
+        wptr.use_count()返回对象的引用计数。
+        需要使用时，调用wptr.lock()返回指向wptr指向的对象的shared_ptr，std::shared_ptr<A> sptr = wptr.lock();。	
+解决循环依赖的方法：把其中一个成员变量shared_ptr换成weak_ptr即可，当然改两个也可以。
 
 进程与线程的区别：
 进程是资源分配的基本单位，线程是CPU调度的基本单位。
@@ -1055,11 +1300,47 @@ shared_ptr底层实现：一个指向对象的指针和一个int类型指针(计
 所属关系：线程依附于进程，不能独立存在。一个进程可以开启多个线程。
 健壮性：进程拥有独立的运行环境，拥有更高的健壮性。
 
-进程与线程基础？
-Async 的用法？
-简单的线程同步（mutex、FCriticalSection）？
-UE 线程模型的基本了解（Game Thread、Render Thread、RHI Thread）？
+左值与右值：能取地址的就是左值，反之是右值。左值可以出现在等号左边或右边，右值只能出现在等号右边。
+一、左值：即具名变量，有自己的地址，相当于正式员工
+1.x++返回的是一个右值，无法取地址。
+2.++x返回的是一个左值，可以取地址和赋值。
+3.字符串字面量其实也是一个左值，因为在编译时字符串字面量会被存储到静态区中，就导致它也可以取到地址。&"hello"不会报错。
+二、右值：即匿名变量，没有自己的地址，相当于临时工
+左值引用：
+左值引用即一般的正常引用，只能指向左值，使用&实现，就是在给左值起别名。
+例如：
+	int a = 1;
+	const int b = 2;
+	int& ra = a;
+	const int& rb = b;
+注意：常量左值引用可以指向右值
+	const int& rb = 2;
+左值引用的意义：
+做函数参数时：减少对象赋值，提高性能。
+做函数返回值时：减少拷贝，提高效率。引用返回，可修改返回对象
+右值引用：
+右值引用即对右值的引用，给右值起别名，使用&&实现。
+例如：
+MyClass Func() {
+    return MyClass();
+}
+
+int main() {
+    int&& a = 2;
+    MyClass&& mc = Func();
+}
+右值引用的意义：
+延长右值的生命周期，减少对象复制，提高性能。
+
+--------------------------------------------------------------------------六、编译与链接------------------------------------------------------------------------
+C++源代码编译的4个过程：预处理、编译、汇编、链接
+预处理：由预编译器负责，删除#define插入宏定义，删除#inlcude插入头文件代码，删除注释。cpp文件经过预编译过程变为.i文件。
+编译：由编译器负责，有词法分析、语法分析、语义分析、中间代码生成、目标代码生成等过程。.i文件经过编译过程变为.s文件(汇编文件)。
+汇编：由汇编器负责，将.s汇编文件转化为.o/obj文件(机器语言文件，由0/1构成的)。每个cpp文件对应一个.obj文件。
+链接：由链接器负责，将所有obj文件和其依赖的库链接起来生成可执行文件。
 
 
---------------------------------------------------------------------------编译与链接------------------------------------------------------------------------
+
+
+
 
