@@ -1241,8 +1241,8 @@ public:
 类模版与函数模版的区别：
 1.调用类模版时只能用显式的方式指定模版的参数，函数模版可以隐式调用
 Person p(1000); 	//错误，未指定模版的参数
-Func(100);  			//正确，隐式指定了模版的参数
-2.类模版可以有初试参数，函数模版不行
+Func(100);  	//正确，隐式指定了模版的参数
+2.类模版可以有初始参数，函数模版不行
 template<class NameType, class AgeType = int> 
 class Person{
 }
@@ -1252,7 +1252,7 @@ class Person{
 class Person
 {
 friend void print(Person &pn);		//也可以在此处直接定义，效果相同
-private:
+private: 
 	int age;
 public:
 	Person(){};
@@ -1284,7 +1284,6 @@ class Person
 {
 	friend void Man::print(Person &pn);
 };
-
 友元类：用于批量制造友元函数，被声明为友元类的所有成员函数都成为了友元函数
 class Person
 {
@@ -1322,10 +1321,6 @@ int main() {
 		cout << me.what();
 	}
 }
-
-指针指向的对象不一定在堆中，也可以指向的是栈中的对象。
-int a = 1;
-int* b = &a;
 
 头文件中最好只有声明，因为有定义的话，若多个cpp文件中包含该头文件，头文件的内容会被复制多份到多个cpp文件中，此时如果有人想要调用被多次定义的方法(变量)，就会导致符号的重定义。
 或者把头文件中的定义都声明为static，也可避免重定义。
@@ -1383,10 +1378,8 @@ int (*ptr)[5] = &arr; // 声明了一个指向包含5个整型元素的数组的
 	}
 字符数组之间的复制要使用STL中的strcpy(target, source)方法，直接复制会报错
 	crr = crr2;		//直接用=赋值字符数组，会报错，因为数组名被解释为指针常量，指向的东西无法改变
-        crr = "345";		//也会报错，因为初始化后无法改变指针的指向
+        	crr = "345";	//也会报错，因为初始化后无法改变指针的指向
 	strcpy(crr, crr2);	//正确的复制方式
-
-string转char[](为了便于char*指向)使用string的.c_str()方法
 
 非静态的成员常量在构造函数中才被初始化，和其他变量存在一起，而不是全局区。
 class A {
@@ -1424,9 +1417,9 @@ int main() {
 	Son son;
 	Base1* bs1 = &son;
 	bs1->Test1();
-	//Base2* bs2 = (Base2*)bs1;	//强制给编译器规定该指针的类型，这样是错误的，会调用到Base1部分对应位置的内容
+	//Base2* bs2 = (Base2*)bs1;			//强制给编译器规定该指针的类型，这样是错误的，会调用到Base1部分对应位置的内容
 	Base2* bs2 = dynamic_cast<Base2*>(bs1);	//这是正确的类型转换方式
-	if (bs2) {						//检查转换是否成功，因为只有同级或基类转派生类能够转换
+	if (bs2) {					//检查转换是否成功，因为只有同级或基类转派生类能够转换
 		cout << bs2->c;
 		bs2->Test2();
 		bs2->Test3();
@@ -1436,7 +1429,7 @@ int main() {
 strcpy_s(m_pszTest, nLen + 1, pszTest);比strcpy更安全，用于数组或指针的字符串拷贝。
 例如：
 	const char cPtr[] = "hello world";
-	char* tmPtr = new char[strlen(cPtr) + 1];	//必须+1，因为字符数组需要一个额外空间存储终止符\0
+	char* tmPtr = new char[strlen(cPtr) + 1];		//必须+1，因为字符数组需要一个额外空间存储终止符\0
 	strcpy_s(tmPtr, strlen(cPtr) + 1, cPtr);		//必须+1，因为缓冲区中需要一个额外空间存储终止符\0
 
 双重指针即指向指针的指针，使用双重指针可以在函数中修改传入的指针参数的指向。
@@ -1446,4 +1439,6 @@ float target = xxx;
 const float EPSINON =1e-6;   
 if(abs(fVar - target) <= EPSNON){} 
 
-网龙公司特有的用名词+动词作为全局函数名。
+
+
+

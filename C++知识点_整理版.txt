@@ -1,5 +1,5 @@
 --------------------------------------------------------------------------一、基础语法--------------------------------------------------------------------------
-3种面向对象特征，4种类自动提供的方法，5个内存存储区域，6个？，9种重要STL容器
+3种面向对象特征，4种类自动提供的方法，5个内存存储区域，6个？，10种重要STL容器
 
 很多官方头文件的类、方法都写在了std作用域下(iostream/vector/deque等)，所以在使用这些方法前要使用std::xxx。
 在不自己定义自己的容器、算法的前提下可以直接使用using namespace std;来简化后续的调用。
@@ -456,6 +456,265 @@ int main(){
 不能声明为虚函数的有：普通函数（非成员函数）；静态成员函数；内联成员函数；构造函数；友元函数。
 
 使用xxx() = delete;删除默认生成的函数，使用virtual xxx() = 0声明纯虚函数。
+
+除了类模板，函数也可以使用模板：
+template <typename T>	//typname与class等效
+T square(T val) {
+    return val * val;
+}
+square<int>(5);	//正常调用
+square(5)		//自动推导
+
+友元函数：让某个全局方法可以访问该类的所有成员，当某个函数与类关系密切，但不适合作为成员函数，就定义为友元函数，例如一个类的输出运算符<<。
+    样例：
+        #include <iostream>
+        using namespace std;
+        class Box {
+        private:
+            double width;
+        public:
+            Box(double w) : width(w) {}
+            // 声明友元函数，允许重载 << 运算符访问 Box 的私有成员
+            friend ostream& operator<<(ostream& os, const Box& b);
+        };
+        // 友元函数实现，重载 << 运算符
+        ostream& operator<<(ostream& os, const Box& b) {
+            os << "Box width: " << b.width;
+            return os;
+        }
+        int main() {
+            Box box(10);
+            cout << box << endl;  // 使用重载的 << 运算符输出 Box 的信息
+            return 0;
+        }
+    0.友元函数的作用是访问一个对象的private和protected成员，普通函数传入对象只能访问其public成员
+    1.友元函数要先在类中用friend声明，然后直接实现或是在类外实现都可以
+    2. 友元函数中必须要有一个类对象的指针(或引用)作为参数
+    3.友元函数不是类成员，函数中不能使用this指针
+    4.友元函数不能被继承
+    5.友元函数相当于是一个全局函数，即使在类中声明并定义，也可以像全局函数一样被全局调用
+    6.友元函数可以是一个全局函数，也可以是另一个类的成员函数
+
+友元类：让另一个类可以访问该类的所有成员，一种很强的开放性关系。
+        class A {
+                int a;
+        public:
+                A(int val) : a(val) {}
+                friend class B;  // 将类 B 声明为友元类
+        };
+        class B {
+        public:
+                void printA(A& obj) {
+                        // 类 B 可以访问类 A 的私有成员
+                        std::cout << "Value of A's private member: " << obj.a << std::endl;
+                }
+        };
+
+异常处理与自定义异常类：在可能出错的地方抛出自定义的错误类型
+         class DatabaseConnectionException exception {
+         public:            
+                  const char* what() {			
+                           return "Failed to connect to database";	
+                  }
+         };
+         int main() {
+                  try {
+                           xxxxxxxx				//连接数据库的流程
+                           throw DatabaseConnectionException();	//流程一旦失败就抛出自定义错误
+                  }
+                  catch(DatabaseConnectionException e){
+                           cout << me.what();
+                  }
+         }
+
+函数在A.cpp文件中定义，在B.cpp文件声明，就可以在B.cpp文件中使用。
+变量在A.cpp文件中定义，在B.cpp文件中使用extern int a声明;，就可以在B.cpp中使用该变量。
+在两者前面加上static都会使其具有内部链接性，让其只能在当前的cpp文件中使用。
+
+一定不要include .cpp文件！因为每个.cpp文件都会被编译为独立的obj文件然后链接在一起。
+如果A.cpp包含(include)了B.cpp，那么B.cpp的代码会被拷贝进A.cpp中，于是B.cpp会被编译两次，出现重定义的链接错误！
+
+
+指针之间可以做减法来确定两者之间的距离，STL中容器的迭代器也可以。
+int main() {    
+        int arr[] = { 1,2,3,5,6 };
+        int* ptr1 = &arr[1];
+        int* ptr2 = &arr[3];        
+        int tmp = ptr2 - ptr1;
+        cout << tmp;		//输出两者之间的元素个数2，如果反转被减数和减数得到-2
+}
+注意：此做法仅限于同一个数组之间。
+
+重载++运算符：
+前缀++：
+class A{
+private：
+    int value = 1;
+public:
+    A& operator++() {
+        value ++;  // 递增对象的状态
+        return *this;  // 返回递增后的对象本身的引用
+    }
+}
+后缀++：
+    A operator++(int) {
+        A tmp(*this);
+        value ++;  // 递增对象的状态
+        return tmp;  // 返回递增后的对象本身的引用
+    }
+前++返回的是引用，后++由于返回的是局部变量故只能返回值。
+为了区别前++和后++，在后++的参数中有一个int类型的标识。
+由于后++返回的是值，所以(a++)++这种操作是会报错的。
+
+char crr[] = "123";  crr的实际长度为4，因为自动添加了结尾符\0。
+
+奇奇怪怪的字符类型char：
+    char crr[] = "123";		//正确
+    char* cptr = "132";	//错误
+    const char* ccptr = "123";	//正确
+    char[]数组将字面值常量复制到栈中，可以对其进行修改。
+    char*作为指针指向字面值常量的存储地址，而字面值常量禁止被修改，所以char*要加上const才允许指向字面值常量
+
+字符数组之间的比较要使用STL中的方法strcmp(arr1, arr2)，返回值为负则第一个串的第一个不同字符上阿斯克码更小，返回0则两字符数组相同，返回正值和负值结果相反
+    char crr[] = "123";
+    char crr2[] = "123";
+    if (strcmp(crr, crr2) == 0) {		//正确的比较方式
+        cout << "???";
+    }
+    if (crr == crr2) {			//不会报错，但是比较的是两个指向第一个元素的指针的地址，肯定是不一样的
+        cout << "???";
+    }
+字符数组之间的复制要使用STL中的strcpy(target, source)方法，因为数组指向无法改变
+   crr = crr2;	//报错，因为数组名被解释为指针常量，指向的东西无法改变
+   crr = "345";	//也会报错，因为初始化后无法改变指针的指向
+   strcpy(crr, crr2);	//正确的复制方式
+注意：如果被复制的数组长度大于容器数组，则会报错
+   char crr[5];         		// 目标数组，最多只能存放4个字符 + '\0'
+   char crr2[] = "Hello"; 	// 实际是 "Hello\0"，长度为6
+   strcpy(crr, crr2);    		// ❌ 溢出了！crr 只有 5 字节空间
+
+全局常量、全局静态常量、字符串常量会存放在常量区。
+而局部常量、常量成员不会放在常量区。
+所以：
+class A {
+        const int v = 1;
+        int arr[v];	//报错，因为编译时v还没被赋值
+};
+
+精度陷阱问题：浮点数以二进制存储，这导致不是所有的十进制小数都能被精确地表示。
+精度陷阱例子：累加1000次0.01只能得到99.999
+        int main() {
+	float sum = 0.0f;
+
+	// 累加1000次
+	for (int i = 0; i < 1000; ++i) {
+		sum += 0.1f;
+	}
+
+	std::cout << "Expected result: " << 1000 * 0.1f << std::endl;	//预期值为100
+	std::cout << "Actual result: " << sum << std::endl;		//实际值为99.999
+	return 0;
+        }
+所以比较两个浮点数一般使其相减再比较一个较小的误差：
+        const float EPSILON = 1e-6f;
+        if (std::fabs(sum - 1000.0f) <= EPSILON) {	//fabs取double类型绝对值，abs取int类型绝对值，fabsf取float类型绝对值
+                std::cout << "是1000！" << std::endl;
+        } else {
+                std::cout << "不是1000！" << std::endl;
+        }
+
+C++10的x次方写作1ex
+例如：
+        int main() {
+	int tmp = 1e4;
+	float tmp2 = 1e-2;
+	cout << tmp << endl;	//输出10000
+	cout << tmp2 << endl;	//输出0.01
+	return 0;
+        }
+
+双重指针：即指向指针的指针，存的值是指针的地址。
+        用途1：在函数中修改指针的指向
+	void Func(int* tmpPtr ){
+	         tmpPtr  = new int(100);
+	}
+                void Allocate(int** tmpPtr ) {
+                        *tmpPtr  = new int(100);
+                }
+                int* p = nullptr;
+	Func(p)		// 无法改变指针指向，传入 int* 类型，实际语法类似int* tmpPtr = p。tmpPtr 只是和 p 指向了同一块空间(nullptr)，改变 tmpPtr 的指向并不能改变 p 的指向和值
+                Allocate(&p);	// 成功改变指针指向，传入 int** 类型，改变*tmpPtr 的指向改变的就是 p 的指向
+                std::cout << *p << std::endl;  // 输出 100
+        用途2：动态二维数组
+                int rows = 3, cols = 4;
+                int** matrix = new int*[rows];  // 每行是一个 int* 指针
+                for (int i = 0; i < rows; ++i) {
+                        matrix[i] = new int[cols];  // 每行分配列
+                }
+
+在大多数地方，数组可以看做指向它的第一个元素的指针：
+        int main() {
+	int staticArr[5]{ 1,2,3 };
+
+	int* dynamicArr = new int[5]{ 1,2,3 };
+	cout << *(staticArr + 2);	//输出3
+	cout << *(dynamicArr + 2);	//输出3
+        }
+
+指针数据与数组指针
+    *指针数组：本质是一个数组，其中的每个元素都是指针。每个指针可以指向一个特定类型的数据或对象。
+        int a = 10, b = 20, c = 30;
+        int* arr[3];  // 声明一个包含3个int指针的数组
+        arr[0] = &a;
+        arr[1] = &b;
+        arr[2] = &c;
+        for (int i = 0; i < 3; ++i) {
+            std::cout << *arr[i] << " ";  // 输出 10 20 30
+        }
+    数组指针：本质是一个指针，数组指针是指向数组的指针，它指向整个数组而非数组的第一个元素。
+        int arr[5] = {1, 2, 3, 4, 5};
+        int (*ptr)[5] = &arr; // 声明了一个指向包含5个整型元素的数组的指针
+        (*ptr)[0] = 10;
+
+用指针数组可以创建二维数组：
+    int* arr[3];
+    for (int i = 0; i < 3; ++i) {
+        arr[i] = new int[4];  // 每行是一个一维数组
+    }
+    for (int i = 0; i < 3; ++i)
+        for (int j = 0; j < 4; ++j)
+            arr[i][j] = i * 10 + j;
+也可以用双重指针在堆上创建二维数组：
+    int** arr = new int*[3];    
+    for (int i = 0; i < 3; ++i) {
+        arr[i] = new int[4];  // 每行是一个一维数组
+    }
+    for (int i = 0; i < 3; ++i)
+        for (int j = 0; j < 4; ++j)
+            arr[i][j] = i * 10 + j;
+
+在栈上创建最简单的二维数组：
+    int arr[3][4]{ {1, 2},{1,2} }; 	// 完全在栈上，类型是 int[3][4]
+    for (int i = 0; i < 3; ++i) {
+        for (int j = 0; j < 4; ++j)
+            std::cout << arr[i][j] << " ";
+            std::cout << "\n";
+        }
+    }
+注意：如果使用了初始化列表赋初始值，那么所有未提及到的元素都会被设置为0，是一个很方便的初始化方式。
+
+C风格的字符串是以\0结尾的字符串，类型为char[]以及char*。
+C++风格的字符串是封装好的string类，功能更为强大，使用更为方便。
+
+string提供的构造函数和赋值运算符可以把任何C风格字符串作为参数来创建string字符串。
+    char arr[] = "hello";
+    char* p = arr;
+    const char* cstr = "Hello, world!";
+    std::string str1 = arr;
+    std::string str2 = p;
+    std::string str3 = cstr;
+
+
 --------------------------------------------------------------------------二、类与对象--------------------------------------------------------------------------
 C++中类可以创建在栈上或创建在堆上，唯一的区别是 是否使用new！
 Student stu = Student();		//标准写法，创建在栈上。
@@ -840,6 +1099,62 @@ C#中直接在类名后面加：
         class MyClass<T>
         {
         }
+
+当函数的参数是对象时，在函数定义之前必须有对象的完整类型信息
+        class Man;
+                void MyFunc(Man man) {		//报错，因为定义Man对象时，必须要告诉编译器Man如何构建
+        }			
+        void MyFunc(Man& man) {		//不报错了，因为仅仅是声明一个指针
+        }	
+
+如果在方法中使用值传递传对象的话，在方法结束时会调用形参的析构函数，导致实参中的指针成员被释放，所以最好不要用值传递来传对象。
+class A {
+public:        
+        int* age;
+        A(int value) {
+                age = new int(value);
+        }
+        ~A() {
+                delete age;
+        }
+        void PrintAge() {
+                cout << *age << endl;
+        }
+};
+void Func(A a) {		//以值传递传对象
+        cout << "Func" << endl;
+}			//作用域结束时调用A的虚析构函数
+int main() {
+        A a = 8;
+        Func(a);		
+        a.PrintAge();		//输出乱码，因为age指针已经被上一行释放了
+}
+
+当一个基类指针指向派生类对象，可以使用dynamic_cast<Derived*>(basePtr)将该指针转换为派生类指针：
+        class Base {
+        public:
+            virtual void foo() {}		//转换的对象必须是多态类型，不然会报错
+        };
+        class Derived : public Base {
+        public:
+            void bar() {}
+        };
+        Base* basePtr = new Derived();  	// 实际指向 Derived 对象
+        Derived* derivedPtr = dynamic_cast<Derived*>(basePtr);
+        if (derivedPtr) {
+            derivedPtr->bar();  		// 安全使用
+        } else {
+            	// 转换失败，basePtr不指向Derived
+        }
+注意：dymamic_cast转换的对象必须是多态类型(即至少拥有一个虚函数)
+
+当一个派生类指针指向派生类对象，可以使用隐式转化让一个基类指针指向派生类：
+        Derived* derivedPtr = new Derived();  // 实际指向 Derived 对象
+        Base* basePtr = derivedPtr;
+
+
+
+
 --------------------------------------------------------------------------三、内存管理--------------------------------------------------------------------------
 C++存储区域5个：
 内存区域	           	存储内容				管理方式			生命周期		特点
@@ -890,15 +1205,27 @@ STL算法的内容基本都在algorithm头文件的std命名空间中，例如fi
 至于*stack和*queue，他们是由deque封装而来，不属于以上某一类。
 
 容器：
-string(注意了，string也属于STL)对标C#的string：
-s.find('a')，查找字符，对标IndexOf('a')
-s.compare(s2)，比较阿斯克码值，对标CompareTo()
-s.insert("a")，只能插字符串而不能插字符,对标Insert()
-s.erase(int pos, int num = 1)，删除pos位置的字符,对标Remove(int pos)
-s.substr(int pos, int num = 1)，截取字符串，对标Substring(int pos, int num = 1)
-s.push_back("a")，插入字符a
-s.begin()/end()获取第一个字符/最后一个字符之后的迭代器
-s.replace()有很多重载，比较有用的是(start, off, char*)，修改字符串
+string：字符串
+初始化：
+    std::string s;		//空字符串
+    std::string s("World")	//构造函数初始化
+    std::string s0 = s;              	//拷贝构造函数初始化
+    std::string s1 = "Hello";	//从const char*初始化
+    std::string s2 = "World";
+    std::string s3 = s1 + " " + s2; // 拼接
+    s3[0] = 'h';  		// 修改字符
+常用方法：
+    *s.size()，获取长度
+    s.length()，同上，获取长度，推荐用上面的
+    *s.find('a')，查找字符或字符串，返回下标，未找到返回std::string::npos
+    *s.substr(int pos, int num)，截取字符串
+    *< > =等符号，比较阿斯克码值
+    *s.insert(pos，str)，在pos下标处插入字符串str 
+    *s.erase(int pos, int num)，删除pos下标之后的num个字符，不传num就删完
+    *s.replace(pos, num, str)，删除位置pos下标后的num个字符，并插入str
+    s.push_back("a")，插入字符a
+    s.begin()/end()获取第一个字符/最后一个字符之后的迭代器
+
 
 vector<>：向量，单端动态数组，内部由一个数组实现
 其迭代器是随机访问迭代器
@@ -912,24 +1239,24 @@ vector在栈上创建vector对象，内部存有指向堆中数组元素的指�
        vector<Person> vec1 = {Person(1),Person(2)};	// 初始化列表
        vector<int> vec(arr, arr + size);		// 使用数组的指针模拟迭代器来初始化
 常用方法：
-v.size()，获取容器元素个数
-v.capacity()，获取容量，为只读
-v.resize(num)，修改容器长度
-v.reserve(int num)，预设容量大小，一般在大致知道要插入的元素数量时，提前设置容量避免多次扩容
-v.empty()，判断容器是否为空
-v.push_back(value)，尾部添加元素
-v.pop_back()，尾部删除元素
-v.begin()，返回指向第一个元素的迭代器，无对应
-v.end()，无对应，返回指向最后一个元素的下一个位置的迭代器1
-v.front()，返回第一个元素
-v.back()，返回最后一个元素
-v.insert(iterator my.begin() + 3, int val)，在下标为3处插入，C++只能用迭代器不能用序号
-v.insert(iterator my.begin() + 3, iterator other.begin(),iterator other.end())
-v.erase(iterator my.begin() + 3)，删除下标为3的元素
-v.erase(iterator  my.begin() + 3, iterator  my.begin() + 4)，删除一段元素(下标3到4的元素)
-v.clear()，清除所有元素
-find(v.begin(),v.end(),int value)，是algorithm库中std作用域的方法，是STL中的算法，寻找某值第一次出现的位置，返回其迭代器，找不到则返回v.end()
-sort(v.begin(), v.end())，是algorithm库中std作用域的方法，是STL中的算法，从小到大排序，有另一个重载类型可以在第三个参数传入函数以指定排序方式
+       v.size()，获取容器元素个数
+       v.capacity()，获取容量，为只读
+       v.resize(num)，修改容器长度
+       v.reserve(int num)，预设容量大小，一般在大致知道要插入的元素数量时，提前设置容量避免多次扩容
+       v.empty()，判断容器是否为空
+       v.push_back(value)，尾部添加元素
+       v.pop_back()，尾部删除元素
+       v.begin()，返回指向第一个元素的迭代器，无对应
+       v.end()，无对应，返回指向最后一个元素的下一个位置的迭代器1
+       v.front()，返回第一个元素
+       v.back()，返回最后一个元素
+       v.insert(iterator my.begin() + 3, int val)，在下标为3处插入，C++只能用迭代器不能用序号
+       v.insert(iterator my.begin() + 3, iterator other.begin(),iterator other.end())
+       v.erase(iterator my.begin() + 3)，删除下标为3的元素
+       v.erase(iterator  my.begin() + 3, iterator  my.begin() + 4)，删除一段元素(下标3到4的元素)
+       v.clear()，清除所有元素
+       find(v.begin(),v.end(),int value)，是algorithm库中std作用域的方法，是STL中的算法，寻找某值第一次出现的位置，返回其迭代器，找不到则返回v.end()
+       sort(v.begin(), v.end())，是algorithm库中std作用域的方法，是STL中的算法，从小到大排序，有另一个重载类型可以在第三个参数传入函数以指定排序方式
 注意：使用迭代器遍历vector来删除某个元素时，小心迭代器失效，要获取返回的迭代器
     // 使用迭代器遍历并删除偶数
     for (auto it = v.begin(); it != v.end();) {
@@ -1129,7 +1456,34 @@ unordered_map的接口：和map相同
     m.find(key)，寻找key是否存在，存在返回指向的迭代器，不存在返回end()
     m.count(key)，查看key的数量，map中为0或1，multimap不是
 
-9个容器总结：
+优先队列priority_queue：
+        1.是队列的一种，包含在queue头文件中。
+        2.相比普通的队列queue，priority_queue在使用push放入元素后会对其进行排序，每次pop的都是当前最大(或最小)的元素。
+        3.内部使用大根堆(1.完全二叉树，2.每个节点都小于等于父节点)进行排序，插入、删除的时间复杂度为logn。(完全二叉树，除了最底层，每一层节点数都达到最大值，且最底层节点集中于左边，并非搜索树)
+        4.一般使用的模版priority_queue<int>创建的是大根堆，pop得到的是最大值，可以看做把元素默认从小到大排列好后，pop输出的是最后的一个值。
+        5.当想要用小根堆进行排序时，必须要使用仿函数并指定容器;
+                struct MyGreater2 {
+                public:
+                    bool operator()(int p1, int p2) {
+                        return p1 > p2;	//顺序反转
+                   }
+                };
+                 priority_queue<int, vector<int>, MyGreater2> pq	//指定堆的容器为vector<int>
+        6.当想要排列其他类型时(例如map)，也要使用模版 priority_queue<pair<int, int>, vector<pair<int, int>>, MyGreater> pq;
+        7.用 priority_queue 是为了“只关心最值 + 快速插入弹出”。
+使用样例：
+    int main() {
+        set<int> s = {3, 1, 4, 2};  // 自动排序，不能重复
+        priority_queue<int> pq;    // 最大堆
+        for (int x : s) pq.push(x);
+        for (int x : s) cout << x << " ";  // 输出: 1 2 3 4
+        while (!pq.empty()) {
+            cout << pq.top() << " ";       // 输出: 4 3 2 1
+            pq.pop();
+        }
+    }
+
+10个容器总结：
     vector：适用于频繁访问元素和追加元素，且插入和删除操作不常发生时。
     deque：适用于需要在两端进行快速插入和删除操作的场景。
     list：适用于频繁插入和删除元素，尤其是在容器中间进行操作时。
@@ -1139,12 +1493,14 @@ unordered_map的接口：和map相同
     map：适用于存储键值对，并且需要自动排序的场景。
     unordered_set：适用于存储唯一元素并要求快速查找、插入和删除的场景，不关心顺序。
     unordered_map：适用于存储键值对并要求快速查找、插入和删除的场景，不关心顺序。
+    priority_queue：只为了“最值 + 快速插入弹出”。可用于解决top-k问题？
 
 注意：
     1.vector和deque容器有迭代器失效风险，注意在插入和删除后更新迭代器为insert、erase的返回值。
     2.set和map中的元素进入时自动排序，故存储自定义类型时必须要在模板的第二个参数指定比较的仿函数或重载比较运算符。
     3.只有vector/deque支持随机访问。
     4.list自己提供了sort方法，set/map自己提供了find方法。
+    5.可以使用范围for循环for(int x : vec)来遍历容器(除了stack/queue/priority_queue等)，不然就要使用迭代器了。
 
 --------------------------------------------------------------------------五、高级特性--------------------------------------------------------------------------
 decltype关键字：是declaration type(声明类型)的缩写。可以通过括号中表达式的类型返回相应的数据类型。
