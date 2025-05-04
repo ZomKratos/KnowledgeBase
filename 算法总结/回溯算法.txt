@@ -104,30 +104,34 @@ void backTracking(参数待定，可以需要的时候再加)
 4.组合总和2(!)：给定一个候选人编号的集合 candidates (可能有重复)和一个目标数 target ，找出 candidates 中所有可以使数字和为 target 的组合。
 注意：组合是不能重复的。
 代码：
-	main(){
-		...
-        	Array.Sort(candidates);
-		...
-	}
-	backtrack(){
-		...
-        	for(int i = startIndex; i < candidates.Length; i++)
-        	{
-            		if (i >= 1 && used[i - 1] == false && candidates[i] == candidates[i - 1])
-            		{
-                		continue;
-            		}
-            		used[i] = true;
-          		path.Add(candidates[i]);
-           		BackTrack(candidates, target, i + 1, sum + candidates[i], used);
-            		path.RemoveAt(path.Count - 1);
-            		used[i] = false;
-       		 }
-	}
-思路：组合不能重复，则在同一树层出现重复元素的时候就要跳过该节点，加入uesd数组来确认每个元素是否加入了path。在遍历的过程中，如果used[i - 1] == false，则candidates[i - 1]和candidates[i ]必定在同一树层，此时如果candidates[i - 1] == candidates[i ](排序后)则就该跳过该节点。
-//引入used数组来解决数组中存在重复元素时组合不能重复的情况
-// used[i - 1] == true，说明candidates[i - 1]和candidates[i ]必定在同一树枝
-// used[i - 1] == false，说明candidates[i - 1]和candidates[i ]必定在同一树层
+    void backTrack(vector<int>& candidates, int target, int index, int sum, vector<int>& path, vector<vector<int>>& result){
+        if(sum > target){
+            return;
+        }
+        else if(sum == target){
+            vector<int> tmp = path;
+            result.push_back(tmp);
+            return;
+        }
+        int last = -1;
+        for(int i = index; i < candidates.size(); i++){
+            if(last != -1 && candidates[i] == last){
+                continue;
+            }
+            path.push_back(candidates[i]);
+            backTrack(candidates, target, i + 1, sum + candidates[i], path, result);
+            path.pop_back();
+            last = candidates[i];
+        }
+        return;
+    }
+    vector<vector<int>> combinationSum2(vector<int>& candidates, int target) {
+        sort(candidates.begin(), candidates.end());
+        vector<vector<int>> result;
+        vector<int> path;
+        backTrack(candidates, target, 0, 0, path, result);
+        return result;
+    }
 
 5.分割回文串：给你一个字符串 s，请你将 s 分割成一些子串，使每个子串都是 回文串 。返回 s 所有可能的分割方案。
 代码：

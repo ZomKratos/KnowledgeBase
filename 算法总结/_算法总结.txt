@@ -1,0 +1,457 @@
+算法类问题的核心：
+    三种算法：贪心算法、动态规划、回溯算法
+
+一、贪心算法：跳跃游戏、区间问题。
+	从局部最优解推导出全局最优解。
+	1.跳跃游戏：给一个非负整数数组 nums，你最初位于数组的第一个下标。数组中的每个元素代表你在该位置可以跳跃的最大长度。判断你是否能够到达最后一个下标，如果可以，返回 true ；否则，返回 false 。
+		bool canJump(vector<int>& nums) {
+        		int maxRange = 0;
+        		for(int i = 0; i < nums.size(); i++){
+            			if(i > maxRange){
+                			return false;
+            			}
+            			if(i + nums[i] > maxRange){							//维护一个最大可到达距离即可
+                			maxRange = nums[i] + i;
+            			}
+        		}
+        		return true;
+    		}
+	2.无重叠区间：给出几个区间，问要至少去掉几个区间才能让区间之间无重复区域。
+    			static bool comparer(vector<int>& vec1, vector<int>& vec2){					//sort作为静态方法，参数的函数也必须是静态的
+        			return vec1[0] < vec2[0];
+    			}
+    			int eraseOverlapIntervals(vector<vector<int>>& intervals) {
+        			int num = intervals.size();
+        			int removeNum = 0;
+        			sort(intervals.begin(), intervals.end(), comparer);
+        			int lastTail = intervals[0][1];
+        			for(int i = 1; i < num; i++){	
+            				if(intervals[i][0] >= lastTail){											//主要思路是判断lastTail和新区间的三种相交情况
+                				lastTail = intervals[i][1];
+            				}
+            				else if(intervals[i][1] <= lastTail){
+               					lastTail = intervals[i][1];
+                				removeNum++;
+            				}
+            				else if(intervals[i][1] > lastTail){
+                				removeNum++;
+            				}
+        			}
+        			return removeNum;
+    			}
+
+二、动态规划：爬楼梯问题、子序列问题、背包问题。
+	1.爬楼梯(菲薄纳西数列)问题：一维动态规划
+		int climbStairs(int n) {
+        		vector<int>dp(n + 2);
+        		dp[0] = 1;
+        		dp[1] = 1;
+        		for(int i = 2; i <= n; i++){
+            			dp[i] = dp[i - 1] + dp[i - 2];
+        		}
+        		return dp[n];
+    		}
+	2.子序列问题：材料只有一个序列时是一维动态规划，有两个时是二维。
+		实际例子：
+		①最长连续递增子序列：求一个数组中最长连续递增的子序列：
+			for(int i = 1; i < len; i++){
+            			if(nums[i] > nums[i - 1]){
+                			dp[i] = dp[i - 1] + 1;
+            			}
+            			else{
+                			dp[i] = 1;
+            			}
+            			max = Math.Max(max, dp[i]);
+        		}
+		②最长递增子序列：题干同上，但是不需要子序列是连续的：
+			 for(int i = 1; i < len; i++)
+       			{
+            			int tmpMax = 1;
+           			 for(int j = 0; j < i; j++)
+            			{
+                			if (nums[i] > nums[j])
+                			{
+                    				tmpMax = Math.Max(tmpMax, dp[j] + 1);
+               	 			}
+            			}
+            			dp[i] = tmpMax;
+            			max = Math.Max(max, dp[i]);
+        		}
+		③最长重复子数组：给两个数组 nums1 和 nums2 ，返回 两个数组中公共最长连续子数组的长度。最长连续子序列的双数组版本。
+			for(int i = 1; i <= len1; i++)
+        		{
+            			for(int j = 1; j <= len2; j++)
+            			{
+                			if (nums1[i - 1] == nums2[j - 1])
+                			{
+                    				dp[i, j] = dp[i - 1, j - 1] + 1;
+                    				max = Math.Max(max, dp[i, j]);
+                			}
+            			}
+        		}
+		④最长公共子序列：上一题的不需要求子数组连续的版本。
+        		for(int i = 1; i <= len1; i++)
+        		{
+           			for(int j = 1; j <= len2; j++)
+            			{
+                			if (text1[i - 1] == text2[j - 1])
+                			{
+                    				dp[i, j] = dp[i - 1, j - 1] + 1;                   
+                			}
+                			else
+                			{
+                    				dp[i, j] = Math.Max(dp[i - 1, j], dp[i, j - 1]);	//唯一的区别在于递推公式
+                			}
+            			}
+        		}
+	3.背包问题：给出一个可选的集合，再给出一个目标值。是二维动态规划。分为01背包、完全背包，以及基于这两者的变种。
+		一般通式：dp[i][j] = max(dp[i - 1][j], dp[i - 1][j - weight[i]] + value[i])	
+		完全背包：dp[i][j] = max(dp[i - 1][j], dp[i][j - weight[i]] + value[i])	
+		捡最少物品实现目标值变种：把第一行初始化为amount + 1，然后把通式的max改为min。
+		实际例子：	
+			①给出钱面值的数组，问能否凑出特定额度的钱。			——一般背包问题，dp[size][amount]代表解锁到size号物品且容量为amount时能凑出的最大值，最后查看dp[size][amount]是否等于target即可判断。
+			②给出钱面值的数组，问求出特定额度钱的最少硬币个数。	——特殊背包问题，dp[size][amount]代表解锁到size号物品且容量为amount时凑出amount需要的最小个数，最后查看dp[size][amount]是否等于amount + 1(第一行的初始值为amount + 1)。
+				if(j >= coins[i - 1]){
+                    			dp[i][j] = min(dp[i - 1][j], dp[i - 1][j - coins[i - 1]] + 1);		//dp[i - 1][j - coins[i - 1]]还是dp[i][j - coins[i - 1]]取决于同一面值是否可以重复选取。
+                		}
+                		else{
+                    			dp[i][j] = dp[i - 1][j];
+               			}
+			③给出一个数组，问凑出一个目标值有多少种方式。			——特殊背包问题，dp[size][amount]代表解锁到size号物品且容量为amount时凑出amount的方式数量，第一列初始化为1。
+				if(j < nums[i - 1])
+               			{
+                   			 dp[i, j] = dp[i - 1, j];
+                		}
+               			else
+               			{
+                   			dp[i, j] = dp[i - 1, j] + dp[i - 1, j - nums[i - 1]];
+              			}   
+	4.其他问题：
+		①编辑距离：给出两个单词 word1和word2， 返回将word1转换成word2所使用的最少操作数(操作有增加、删除、修改) 。
+			for(int i = 1; i <= len1; i++){
+            			for(int j = 1; j <= len2; j++){
+                			if(word1[i - 1] == word2[j - 1]){
+                    				dp[i, j] = dp[i - 1, j - 1];
+                			}
+                			else{
+                    				dp[i, j] = Math.Min(dp[i - 1, j], Math.Min(dp[i, j - 1], dp[i - 1, j - 1])) + 1;
+               				}
+            			}
+        		}
+		②回文子串：给出字符串s ，统计并返回这个字符串中回文子串的数目。可能要求子串或序列，子串连续、子序列不需要连续。
+        		for(int i = len - 1; i >= 0; i--)
+        		{
+            			for (int j = i; j < len; j++)		//因为递推公式需要矩阵中左下角的数据，所以从下到上，从左到右遍历
+            			{
+                			if (s[i] == s[j])
+                			{
+                    				if(i == j || i + 1 == j)
+                    				{
+                        				dp[i, j] = true;
+                    				}
+					}
+                    			else
+                    			{
+                        			dp[i, j] = dp[i + 1, j - 1];	//若为子序列，则递推公式为：dp[i, j] = dp[i + 1, j] || dp[i][j - 1];
+                    			}
+                    			nums = dp[i, j] == true ? nums + 1 : nums;	
+                		}
+            		}
+
+三、回溯算法：组合问题、排列问题、集合问题、回文串问题、N皇后问题。
+	有递归才有回溯，将算法过程看做一个树形结构。
+	是一种纯暴力算法，用于解决一切用for循环难以解决的问题。
+	例如求范围 [1, n]中长度为2的组合，若n=4，k=2，则返回[[1,2],[1,3],[1,4],[2,3],[2,4],[3,4]]，用两层for循环可以找出
+		for(int i = 1; i <= n; i++){         
+            		for(int j = i + 1; j <= n; j++){
+               			vector<int> tmp;
+                		tmp.push_back(i);
+                		tmp.push_back(j);
+                		result.push_back(tmp);
+           	 	}        
+        	}
+	但是求长度为50的时候，就要用50层for循环，当求长度为k的时候用for循环就没法写了，连要多少层循环都不知道。这时就只能用回溯算法解决。
+	固定公式：
+		void backTracking(参数待定，可以需要的时候再加)
+		{
+			if(终止条件)
+			{
+				收集结果;
+				return;
+			}
+			for(遍历集合元素)
+			{
+				添加节点影响；
+				进行递归；
+				删除节点影响；
+			}
+			return ;
+		}
+
+	回溯三要素：
+		结束条件
+		开始遍历的位置
+		path数组的操作
+	经典例题：	
+		1.组合问题
+			①组合：给定两个整数 n 和 k，返回范围 [1, n] 中所有可能的 k 个数的组合。												//标准的回溯问题
+    				    void backTrack(vector<vector<int>>& result, vector<int>& path, int n, int k, int index){
+        				if(path.size() == k){
+            					vector<int> tmp = path;
+            					result.push_back(tmp);
+            					return;
+        				}
+        				for(int i = index; i <= n; i++){
+            					path.push_back(i);
+            					backTrack(result, path, n, k, i + 1);
+            					path.pop_back();
+        				}
+        				return;
+    				}
+			②电话号码的字母组合：给定一个仅包含数字 2-9 的字符串，返回所有它能表示的字母组合。答案可以按 任意顺序 返回。
+				void backTrack(string digits, int index, vector<string>& result, string& path, vector<vector<char>> chars){
+        				if(path.size() == digits.size()){
+            					string tmp = path;
+            					result.push_back(tmp);
+            					return;
+        				}
+        				vector<char> tmp = chars[digits[index] - 48];
+        				for(int i = 0; i < tmp.size(); i++){
+            					path.push_back(tmp[i]);
+            					backTrack(digits, index + 1, result, path, chars);
+            					path.pop_back();
+        				}
+        				return;
+    				}
+		2.全排列问题
+			①全排列：给定一个不含重复数字的数组 nums，返回其所有可能的全排列 。
+    				void backTrack(vector<vector<int>>& result, vector<int> path, vector<bool> hasUsed, vector<int>& nums){			//特点是使用hasUsed数组来保证每一层从头开始选择的同时不会选到自己
+        				if(path.size() == nums.size()){
+            					result.push_back(path);
+            					return;
+        				}
+        				for(int i = 0; i < nums.size(); i++){
+            					if(!hasUsed[i]){
+                					path.push_back(nums[i]);
+                					hasUsed[i] = true;
+                					backTrack(result, path, hasUsed, nums);
+                					hasUsed[i] = false;
+                					path.pop_back();
+            					}
+        				}
+    				}
+			②全排列 II：给定一个可包含重复数字的序列 nums ，按任意顺序 返回所有不重复的全排列。									//特点是同时使用了hasUsed数组和last
+				void backTrack(vector<vector<int>>& result, vector<int> path, vector<int>& nums, vector<bool> hasUsed){
+        				if(path.size() == nums.size()){
+            					result.push_back(path);
+            					return;
+        				}
+        				int last = -11;
+        				for(int i = 0; i < nums.size(); i++){
+            					if(!hasUsed[i] && nums[i] != last){
+                					path.push_back(nums[i]);
+                					hasUsed[i] = true;
+                					backTrack(result, path, nums, hasUsed);
+                					hasUsed[i] = false;
+                					path.pop_back();
+                					last = nums[i];
+            					}
+        				}
+    				}
+		3.子集问题
+			①子集：整数数组 nums ，数组中的元素 互不相同 。返回该数组所有可能的子集（幂集）。									//特点是每一层都可以向result添加子集而不是最后添加
+				void backTrack(vector<int>& nums, vector<vector<int>>& result, vector<int> path, int index){			
+        				if(index >= nums.size()){
+            					return;
+       	 				}
+        				for(int i = index; i < nums.size(); i++){
+            					path.push_back(nums[i]);
+            					result.push_back(path);
+            					backTrack(nums, result, path, i + 1);
+            					path.pop_back();
+        				}
+    				}
+			②子集II：给你一个整数数组 nums ，其中可能包含重复元素，请你返回该数组所有可能的不同子集（幂集）。						//特点是使用了last来保证不包含重复的子集
+				void trackBack(vector<vector<int>>& result, vector<int>& path, vector<int>& nums, int index){
+        				if(index == nums.size()){
+            					return;
+        				}	
+        				int last = -11;
+        				for(int i = index; i < nums.size(); i++){
+            					if(last != nums[i]){
+                					path.push_back(nums[i]);
+               					 	result.push_back(path);
+                					trackBack(result, path, nums, i + 1);
+                					last = nums[i];
+                					path.pop_back();
+            					}
+        				}
+    				}
+		4.字符串分割
+			①分割回文串：给你一个字符串 s，请你将 s 分割成一些 子串，使每个子串都是 回文串 。返回 s 所有可能的分割方案。			 	//特点是利用index来获取index~i之间的字符串                
+    				void backing(string s, int start) {																				//请将其与动态规划的回文子串数目问题区分开来。
+        				if (start == n) {
+            					ans.push_back(res);
+            					return;
+        				}
+        				for (int i = start; i < s.size(); i++) {
+            					string tmp = s.substr(start, i - start + 1);
+            					if (isHuiwen(tmp)) {
+                					res.push_back(tmp);
+                					backing(s, i + 1);
+                					res.pop_back();
+            					}
+        				}
+    				}
+    				vector<vector<string>> partition(string s) {
+        				n = s.size();
+       					backing(s, 0);
+        				return ans;
+    				}
+			②复原IP地址：给定一个只包含数字的字符串 s ，用以表示一个 IP 地址，返回所有可能的有效 IP 地址，这些地址可以通过在 s 中插入 '.' 来形成。有效 IP 地址 正好由四个整数（每个整数位于 0 到 255 之间组成，且	不能含有前导 0），整数之间用 '.' 分隔。
+				void backTrack(string s, int index, int pointNum){
+        				if(pointNum > 4 || index > s.size()){
+            					return;
+        				}
+        				else if(pointNum == 4 && index < s.size()){
+            					return;
+        				}
+        				else if(pointNum == 4 && index == s.size()){
+            					path.pop_back();
+            					result.push_back(path);
+            					path.push_back('.');
+            					return;
+        				}
+        				for(int i = index; i < s.size(); i++){
+            					int length = i - index + 1;
+            					if(length >= 4){
+                					continue;
+            					}
+            					string str = s.substr(index, length);
+            					int num = stoi(str);
+            					if(length <= 3 && num <= 255 && to_string(num).size() == length){
+                					path.append(str);
+                					path.push_back('.');
+                					backTrack(s, i + 1, pointNum + 1);
+                					path.pop_back();
+                					path.erase(path.size() - length, length);
+            					}
+       	 				}
+    				}
+		5.N皇后问题：n 皇后问题研究的是如何将n个皇后放置在 n×n 的棋盘上，并且使皇后彼此之间不能相互攻击。给你一个整数 n ，返回所有不同的n皇后问题 的解决方案。
+    																										//并非困难题，将二维数组理解为回溯的层和列即可，利用index作为二维数组的行
+			void backTrack(int n, vector<vector<string>>& result, vector<string> path, int i){									     			
+				if(i == n){
+            				result.push_back(path);
+            				return;
+        			}
+        			for(int k = 0; k < n; k++){
+            				if(isValid(path, i, k, n)){
+                				path[i][k] = 'Q';
+                				backTrack(n, result, path, i + 1);
+                				path[i][k] = '.';
+            				}
+        			}
+    			}
+
+四、滑动窗口
+	无重复字符的最长子串：给定一个字符串 s ，请你找出其中不含有重复字符的最长子串的长度：
+		while(end != size){
+            		if(tmpSet.find(s[end]) == tmpSet.end()){              		//如果末尾不不在集合中，就加入集合
+                		tmpSet.insert(s[end]);
+                		maxLength = max(maxLength, end - start + 1);
+                		end++;
+            		}
+            		else{											//如果末尾在集合中，就从start开始删除集合的元素，直到找到重复字符
+                		while(s[start] != s[end]){
+                    			tmpSet.erase(s[start]);
+                    			start++;
+                		}
+                		tmpSet.erase(s[start]);
+                		tmpSet.insert(s[end]);
+                		start++;
+                		end++;
+            		}
+        	}
+	找到字符串中所有字母异位词：给定两个字符串 s 和 p，找到 s 中所有 p 的 异位词 的子串，返回这些子串的起始索引。异位词 指由相同字母重排列形成的字符串（包括相同的字符串）。例如输入: s = "cbaebabacd", p = "abc"输出: [0,6]
+		while(end < s.size()){
+           		if(tmpMap.find(s[end]) == tmpMap.end()){		//如果字母不在字典中，就跳过
+                		end++;
+                		start = end;
+                		tmpMap = originMap;
+            		}		
+            		else if(tmpMap[s[end]] > 0){					//如果字典对字母的要求还存在，则操作字典、比对长度是否符合要求
+                		tmpMap[s[end]]--;
+                		if(end - start + 1 == p.size()){
+                    			result.push_back(start);
+                    			tmpMap[s[start]]++;
+                    			start++;
+                		}
+                		end++;
+            		}
+           		else{
+                		while(s[start] != s[end]){					//如果字典对字母的要求已饱和，从start退出字符直到遇到end的字符
+                    			tmpMap[s[start]]++;
+                    			start++;
+                		}
+                		start++;
+                		end++;
+            		}
+        	}
+
+五、遇到过的问题
+	1.快排：挖掉left作为预选值(作为一个坑位)，不断用从后、从前的指针对比预选值，并覆盖掉另一个指针，最后两个指针指向同一个位置，用预选值替代它，就获得了以该位置为分界的划分，分别对前半和后半部分进行递归。
+		class Solution {
+			public:
+    				void quickSort(vector<int>& nums, int left, int right){
+        				if(left >= right){
+            					return;
+        				}
+					int key = nums[left];
+        				int head = left;
+        				int tail = right;
+        				while(head < tail){
+            					while(head < tail && nums[tail] >= key){
+                					tail--;
+            					}
+            					nums[head] = nums[tail];
+            					while(head < tail && nums[head] <= key){
+                					head++;
+            					}
+            					nums[tail] = nums[head];
+        				}
+        				nums[head] = key;
+        				quickSort(nums, left, head - 1);
+        				quickSort(nums, head + 1, right);
+    				}
+    			vector<int> sortArray(vector<int>& nums) {
+        			quickSort(nums, 0, nums.size() - 1);
+        			return nums;
+   		 	}
+		};
+	
+			
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	

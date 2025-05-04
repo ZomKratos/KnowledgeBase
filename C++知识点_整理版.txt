@@ -717,7 +717,16 @@ string提供的构造函数和赋值运算符可以把任何C风格字符串作�
 
 C++中提供改了一些常用的常量，例如INT32_MAX、INT32_MIN等等。
 
+vector创建二维数组并初始化长度：
+    vector<vector<int>> matrix(rows, vector<int>(cols)); 	// 注意，vector<int>(6)会自动初始化6个元素为0
+    vector<vector<int>>vec {{ 1,2},{2,3},{3,4},{-100,-2},{5,7}};
 
+vector<char>转string：
+    string s(vec.begin(), vec.end());
+
+方法返回一个std容器是安全的(即使容器内存在堆上)，并且有C++返回值优化，效率很高。
+
+sort是静态方法，参数comparer是成员方法时必须是静态成员方法。
 
 --------------------------------------------------------------------------二、类与对象--------------------------------------------------------------------------
 C++中类可以创建在栈上或创建在堆上，唯一的区别是 是否使用new！
@@ -1227,7 +1236,9 @@ string：字符串
     *s.insert(pos，str)，在pos下标处插入字符串str 
     *s.erase(int pos, int num)，删除pos下标之后的num个字符，不传num就删完
     *s.replace(pos, num, str)，删除位置pos下标后的num个字符，并插入str
-    s.push_back("a")，插入字符a
+    s.push_back('a')，插入字符a
+    s.pop_back()，尾部删除字符
+    s.append("str")，插入字符串，也可以直接用加号
     s.begin()/end()获取第一个字符/最后一个字符之后的迭代器
 
 
@@ -1305,22 +1316,6 @@ pop_back()，尾删
 deque没有capacity和他的设置，因为它和list一样设计的初衷就是可以无限增长(内存不连续)
 双端数组可以看做是vector的兄弟，差别不大，在C#中没有对应的类型
 
-stack<>与queue<>：栈与队列，内部由数组实现，不允许用大括号初始化
-定义：
-std::stack<int> s;
-std::queue<int> q;
-栈和队列都只有几个接口：
-push(int val)，入栈/队列，对应C#栈的Push(int val)和队列的Enqueue(int val)
-pop()，出栈/队列，对应C#栈的Pop()和队列的Dequeue()
-empty()，判断是否为空
-size()，获取大小，对应Count属性
-其中栈的特殊接口：
-top()，返回栈顶元素，对应Peek()
-队列的特殊接口：
-front()，返回队列头的元素，对应Peek()
-back()，返回队列尾的元素，无对应，但是Linq扩展方法中有Last()方法
-两者都没有获取迭代器的接口
-
 list：双向循环链表，由节点构成。节点由数据域和指针域构成，指针域有两个指针，一个是指向前一个节点的指针，另一个是指向后一个节点的指针。
 优点：插入删除速度快
 缺点：遍历速度慢，占用空间大
@@ -1362,6 +1357,22 @@ int main(){
     myList.insert(it, 999);  
 }
 
+stack<>与queue<>：栈与队列，内部由数组实现，不允许用大括号初始化
+定义：
+std::stack<int> s;
+std::queue<int> q;
+栈和队列都只有几个接口：
+push(int val)，入栈/队列，对应C#栈的Push(int val)和队列的Enqueue(int val)
+pop()，出栈/队列，对应C#栈的Pop()和队列的Dequeue()
+empty()，判断是否为空
+size()，获取大小，对应Count属性
+其中栈的特殊接口：
+top()，返回栈顶元素，对应Peek()
+队列的特殊接口：
+front()，返回队列头的元素，对应Peek()
+back()，返回队列尾的元素，无对应，但是Linq扩展方法中有Last()方法
+两者都没有获取迭代器的接口
+
 set/multiset：集合
 set的特点：
     自动排序：元素会在插入时根据大小自动排序（默认用 < 比较）。
@@ -1385,10 +1396,10 @@ set初始化：
     s.erase(iterator it)，移除迭代器指向的元素
     s.erase(iterator begin, iterator end)
     s.erase(int val)，移除特定元素
-    s.find(int val)，关联式容器有自己的find方法，元素存在则返回指向该元素的迭代器，不存在就返回end()，可以通过检查是否==s.end()来判断元素是否在set中。
-    s.count(int val)，统计元素的个数，在set中只能为0或1，在multiset中有更多，可冒充find方法看返回值是否为0来判断是否存在
+    s.find(int val)，关联式容器有自己的find方法，元素存在则返回指向该元素的迭代器，不存在就返回end()，可以通过检查是否==s.end()来判断元素是否在set中
+    s.count(int val)，统计元素的个数，在set中只能为0或1，在multiset中有更多，对于未初始化的val直接返回0
 通过在模版中传入第二个仿函数参数来实现自定义排序规则。
-仿函数(Function Object)是一种通过重载operator()来模拟函数行为的类。在该类实例化后可以当做普通的函数调用，优势作为一个类，相比函数可以保存状态并且具备更强的灵活性。
+仿函数(Function Object)是一种通过重载operator()来模拟函数行为的类。在该类实例化后可以当做普通的函数调用，优势作为一个类，相比函数可以保存状态并且具备更强的灵活性
 class Greater {
 public:
     bool operator()(int x, int y){
@@ -1644,9 +1655,9 @@ shared_ptr是共享性指针，可以由多个shared_ptr指向同一个对象。
         shared_ptr<A> a = make_shared<A>();
         shared_ptr<B> b = make_shared<B>();
         a->b_ptr = b;
-        b->a_ptr = a;
+        b->a_ptr = a;-
         原因：实际上存在4个智能指针，2个局部变量，2个成员变量。
-	  在外部作用域结束时，2个局部变量被释放，但因为两个成员变量互相持有，导致最后引用计数都为1，最终两个裸指针的对象都无法释放。	
+	在作用域结束时，局部变量智能指针a被释放，a指向对象的引用计数变为2-1=1，只是指针释放掉了，指针指向的对象没有被析构，也就内存泄漏了。b同理。
         weak_ptr：weak_ptr是一个观察器，没有重载*和->，无法访问指针，不增加对象的引用计数，作用是与shared_ptr一起使用来解决循环依赖。
         weak_ptr只能用shared_ptr来初始化：weak_ptr<int>wp = sptr;
         wptr.use_count()返回对象的引用计数。
